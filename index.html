@@ -139,6 +139,7 @@ function render() {
     kpi("Reach", fmt(sum("reach")), `last ${state.days} days`) +
     kpi("Views", fmt(sum("views")), `last ${state.days} days`) +
     kpi("Profile visits", fmt(sum("profile_views")), `last ${state.days} days`) +
+    kpi("Reposts", acct.some(r => r.reposts != null) ? fmt(sum("reposts")) : "–", `last ${state.days} days`) +
     kpi("Avg engagement", pct(avgER), `${ps.length} posts · interactions ÷ reach`);
 
   drawLine("cFollowers", acct.map(r => r.date), [{ label: "Followers", data: acct.map(r => r.followers), color: css("--c1") }]);
@@ -199,12 +200,12 @@ function drawTable(ps) {
   const top = [...ps].sort((a, b) => (b.reach || 0) - (a.reach || 0)).slice(0, 15);
   const t = document.getElementById("posts");
   t.innerHTML = `<tr><th>Date</th><th>Format</th><th>Caption</th><th class="n">Reach</th><th class="n">Views</th>
-    <th class="n">Likes</th><th class="n">Comments</th><th class="n">Saves</th><th class="n">Shares</th><th class="n">Eng.</th><th></th></tr>`;
+    <th class="n">Likes</th><th class="n">Comments</th><th class="n">Saves</th><th class="n">Shares</th><th class="n">Reposts</th><th class="n">Eng.</th><th></th></tr>`;
   top.forEach(p => {
     const tr = t.insertRow();
     const cells = [p.ts.toLocaleDateString(), p.format, (p.caption || "").slice(0, 80)];
     cells.forEach((c, i) => { const td = tr.insertCell(); td.textContent = c; if (i === 2) td.className = "cap"; });
-    [p.reach, p.views, p.likes, p.comments, p.saves, p.shares].forEach(v => {
+    [p.reach, p.views, p.likes, p.comments, p.saves, p.shares, p.reposts].forEach(v => {
       const td = tr.insertCell(); td.className = "n"; td.textContent = fmt(v); });
     const e = tr.insertCell(); e.className = "n"; e.textContent = pct(p.er);
     const l = tr.insertCell(); const a = document.createElement("a");

@@ -22,14 +22,15 @@ BASE = f"https://graph.instagram.com/{API_VERSION}"
 DATA = Path(__file__).parent / "data"
 
 ACCOUNT_FIELDS = ["date", "followers", "media_count", "reach", "views",
-                  "profile_views", "accounts_engaged", "fetched_at"]
+                  "profile_views", "accounts_engaged", "reposts", "fetched_at"]
 MEDIA_FIELDS = ["id", "timestamp", "media_type", "media_product_type", "permalink", "caption"]
 METRIC_FIELDS = ["id", "fetched_at", "likes", "comments", "reach", "views",
-                 "saves", "shares", "total_interactions"]
+                 "saves", "shares", "reposts", "total_interactions"]
 
-ACCOUNT_METRICS = ["reach", "views", "profile_views", "accounts_engaged"]
+ACCOUNT_METRICS = ["reach", "views", "profile_views", "accounts_engaged", "reposts"]
 MEDIA_METRICS = {"reach": "reach", "views": "views", "saved": "saves",
-                 "shares": "shares", "total_interactions": "total_interactions"}
+                 "shares": "shares", "reposts": "reposts",
+                 "total_interactions": "total_interactions"}
 
 RECENT_DAYS = 14   # posts newer than this are re-snapshotted every run
 MAX_POSTS = 50     # how many latest posts to track
