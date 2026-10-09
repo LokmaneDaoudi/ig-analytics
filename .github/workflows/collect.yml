@@ -1,0 +1,56 @@
+name: Collect Instagram analytics
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"   # every 2 hours
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - name: Collect data
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+        run: python collect.py
+
+      # Optional: refresh the 60-day token weekly. Needs a PAT with "secrets" write
+      # access stored as the GH_PAT secret; skipped when GH_PAT is not set.
+      - name: Refresh token (Mondays, first run of the day)
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -n "$GH_TOKEN" ] && [ "$(date -u +%u)" = "1" ] && [ "$(date -u +%H)" -lt 2 ]; then
+            NEW=$(python collect.py --refresh-token)
+            echo "::add-mask::$NEW"
+            gh secret set IG_TOKEN --body "$NEW" --repo "$GITHUB_REPOSITORY"
+          fi
+
+      - name: Commit data
+        run: |
+          git config user.name "analytics-bot"
+          git config user.email "analytics-bot@users.noreply.github.com"
+          git add data/*.csv
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Update analytics data"
+            git pull --rebase
+            git push
+          fi

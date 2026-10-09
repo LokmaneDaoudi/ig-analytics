@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instagram Analytics</title>
+<style>
+  :root {
+    --bg: #f6f6f4; --card: #ffffff; --ink: #1b1b1a; --muted: #6b6b66; --line: #e4e4df;
+    --c1: #c13584; --c2: #2f6fed; --c3: #1f9d6b; --warn-bg: #fff4d6; --warn-ink: #7a5b00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121211; --card: #1b1b1a; --ink: #eeeeea; --muted: #9a9a93; --line: #2d2d2a;
+            --c1: #e0609f; --c2: #6c9bff; --c3: #43c58f; --warn-bg: #3a2f10; --warn-ink: #f0d27a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 56px; }
+  header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  h1 { font-size: 22px; margin: 0; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .range button { background: var(--card); color: var(--ink); border: 1px solid var(--line);
+                  padding: 6px 12px; cursor: pointer; font: inherit; }
+  .range button:first-child { border-radius: 8px 0 0 8px; }
+  .range button:last-child { border-radius: 0 8px 8px 0; }
+  .range button + button { border-left: 0; }
+  .range button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .banner { background: var(--warn-bg); color: var(--warn-ink); padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; display: none; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .kpi .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .kpi .val { font-size: 28px; font-weight: 650; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .kpi .delta { font-size: 13px; color: var(--muted); }
+  .up { color: var(--c3); } .down { color: #d1493f; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; margin-bottom: 12px; }
+  h2 { font-size: 14px; margin: 0 0 10px; }
+  .chart { position: relative; height: 240px; }
+  .heat { display: grid; grid-template-columns: 34px repeat(24, 1fr); gap: 2px; font-size: 10px; color: var(--muted); }
+  .heat div { aspect-ratio: 1.4; border-radius: 3px; display: flex; align-items: center; justify-content: center; }
+  .heat .lbl { aspect-ratio: auto; justify-content: flex-start; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; }
+  td.cap { white-space: normal; min-width: 180px; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .scroll { overflow-x: auto; }
+  a { color: var(--c2); }
+  .err { padding: 40px 0; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Instagram Analytics</h1>
+      <div class="sub" id="updated">Loading…</div>
+    </div>
+    <div class="range" id="range">
+      <button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button>
+    </div>
+  </header>
+  <div class="banner" id="stale"></div>
+  <div id="app">
+    <div class="kpis" id="kpis"></div>
+    <div class="grid">
+      <div class="card"><h2>Followers</h2><div class="chart"><canvas id="cFollowers"></canvas></div></div>
+      <div class="card"><h2>Daily reach &amp; views</h2><div class="chart"><canvas id="cReach"></canvas></div></div>
+      <div class="card"><h2>Average reach by format</h2><div class="chart"><canvas id="cFormat"></canvas></div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <h2>Best time to post <span class="sub">(average reach, your local time)</span></h2>
+      <div class="heat" id="heat"></div>
+    </div>
+    <div class="card">
+      <h2>Top posts in range</h2>
+      <div class="scroll"><table id="posts"></table></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const STALE_HOURS = 6;
+let state = { days: 30, account: [], media: [], metrics: [] };
+const charts = {};
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = n => n == null || isNaN(n) ? "–" : Math.round(n).toLocaleString();
+const pct = n => n == null || isNaN(n) ? "–" : (n * 100).toFixed(1) + "%";
+const parseTs = s => new Date(String(s).replace("+0000", "Z"));
+
+function load(file) {
+  return new Promise((res, rej) => Papa.parse(`data/${file}?t=${Date.now()}`, {
+    download: true, header: true, skipEmptyLines: true, dynamicTyping: true,
+    complete: r => res(r.data), error: rej
+  }));
+}
+
+function formatOf(m) {
+  if (m.media_product_type === "REELS") return "Reel";
+  if (m.media_type === "CAROUSEL_ALBUM") return "Carousel";
+  if (m.media_type === "IMAGE") return "Image";
+  if (m.media_type === "VIDEO") return "Video";
+  return m.media_product_type || m.media_type || "Other";
+}
+
+// latest snapshot per post, joined with post info
+function posts() {
+  const latest = {};
+  for (const r of state.metrics) {
+    if (!latest[r.id] || r.fetched_at > latest[r.id].fetched_at) latest[r.id] = r;
+  }
+  return state.media.filter(m => latest[m.id]).map(m => {
+    const s = latest[m.id], ts = parseTs(m.timestamp);
+    const eng = s.total_interactions ?? ((s.likes || 0) + (s.comments || 0) + (s.saves || 0) + (s.shares || 0));
+    return { ...m, ...s, ts, format: formatOf(m), er: s.reach ? eng / s.reach : null };
+  });
+}
+
+function inRange(items, getDate) {
+  const cutoff = Date.now() - state.days * 864e5;
+  return items.filter(i => getDate(i).getTime() >= cutoff);
+}
+
+function render() {
+  const acct = inRange(state.account, r => new Date(r.date + "T00:00:00Z"));
+  const ps = inRange(posts(), p => p.ts);
+  const sum = k => acct.reduce((a, r) => a + (+r[k] || 0), 0);
+  const first = acct.find(r => r.followers != null), last = [...acct].reverse().find(r => r.followers != null);
+  const growth = first && last ? last.followers - first.followers : null;
+  const ers = ps.map(p => p.er).filter(x => x != null);
+  const avgER = ers.length ? ers.reduce((a, b) => a + b, 0) / ers.length : null;
+
+  const kpi = (label, val, delta) => `<div class="card kpi"><div class="label">${label}</div><div class="val">${val}</div><div class="delta">${delta || "&nbsp;"}</div></div>`;
+  document.getElementById("kpis").innerHTML =
+    kpi("Followers", fmt(last?.followers), growth == null ? "" :
+        `<span class="${growth >= 0 ? "up" : "down"}">${growth >= 0 ? "+" : ""}${fmt(growth)}</span> in ${state.days}d`) +
+    kpi("Reach", fmt(sum("reach")), `last ${state.days} days`) +
+    kpi("Views", fmt(sum("views")), `last ${state.days} days`) +
+    kpi("Profile visits", fmt(sum("profile_views")), `last ${state.days} days`) +
+    kpi("Avg engagement", pct(avgER), `${ps.length} posts · interactions ÷ reach`);
+
+  drawLine("cFollowers", acct.map(r => r.date), [{ label: "Followers", data: acct.map(r => r.followers), color: css("--c1") }]);
+  drawLine("cReach", acct.map(r => r.date), [
+    { label: "Reach", data: acct.map(r => r.reach), color: css("--c2") },
+    { label: "Views", data: acct.map(r => r.views), color: css("--c3") }]);
+
+  const byFmt = {};
+  ps.forEach(p => { (byFmt[p.format] ||= []).push(p.reach || 0); });
+  const labels = Object.keys(byFmt);
+  drawBar("cFormat", labels.map(l => `${l} (${byFmt[l].length})`),
+          labels.map(l => byFmt[l].reduce((a, b) => a + b, 0) / byFmt[l].length));
+
+  drawHeat(ps);
+  drawTable(ps);
+}
+
+function baseOpts() {
+  const grid = css("--line"), tick = css("--muted");
+  return { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+    plugins: { legend: { labels: { color: tick, boxWidth: 12 } } },
+    scales: { x: { ticks: { color: tick, maxTicksLimit: 6 }, grid: { display: false } },
+              y: { ticks: { color: tick }, grid: { color: grid } } } };
+}
+function drawLine(id, labels, sets) {
+  charts[id]?.destroy();
+  charts[id] = new Chart(document.getElementById(id), { type: "line",
+    data: { labels, datasets: sets.map(s => ({ label: s.label, data: s.data, borderColor: s.color,
+      backgroundColor: s.color, tension: .3, pointRadius: 0, borderWidth: 2 })) },
+    options: baseOpts() });
+}
+function drawBar(id, labels, data) {
+  charts[id]?.destroy();
+  const o = baseOpts(); o.plugins.legend.display = false;
+  charts[id] = new Chart(document.getElementById(id), { type: "bar",
+    data: { labels, datasets: [{ data, backgroundColor: css("--c1"), borderRadius: 4 }] }, options: o });
+}
+
+function drawHeat(ps) {
+  const cells = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => []));
+  ps.forEach(p => cells[(p.ts.getDay() + 6) % 7][p.ts.getHours()].push(p.reach || 0));
+  const avg = cells.map(r => r.map(c => c.length ? c.reduce((a, b) => a + b, 0) / c.length : null));
+  const max = Math.max(1, ...avg.flat().filter(x => x != null));
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const el = document.getElementById("heat");
+  let h = `<div class="lbl"></div>` + Array.from({ length: 24 }, (_, i) => `<div>${i % 3 === 0 ? i : ""}</div>`).join("");
+  avg.forEach((row, d) => {
+    h += `<div class="lbl">${days[d]}</div>`;
+    row.forEach((v, hr) => {
+      const bg = v == null ? "transparent" : `color-mix(in srgb, ${css("--c1")} ${Math.round(15 + 85 * v / max)}%, transparent)`;
+      h += `<div title="${days[d]} ${hr}:00 – ${v == null ? "no posts" : fmt(v) + " avg reach"}" style="background:${bg};${v == null ? "border:1px dashed var(--line)" : ""}"></div>`;
+    });
+  });
+  el.innerHTML = h;
+}
+
+function drawTable(ps) {
+  const top = [...ps].sort((a, b) => (b.reach || 0) - (a.reach || 0)).slice(0, 15);
+  const t = document.getElementById("posts");
+  t.innerHTML = `<tr><th>Date</th><th>Format</th><th>Caption</th><th class="n">Reach</th><th class="n">Views</th>
+    <th class="n">Likes</th><th class="n">Comments</th><th class="n">Saves</th><th class="n">Shares</th><th class="n">Eng.</th><th></th></tr>`;
+  top.forEach(p => {
+    const tr = t.insertRow();
+    const cells = [p.ts.toLocaleDateString(), p.format, (p.caption || "").slice(0, 80)];
+    cells.forEach((c, i) => { const td = tr.insertCell(); td.textContent = c; if (i === 2) td.className = "cap"; });
+    [p.reach, p.views, p.likes, p.comments, p.saves, p.shares].forEach(v => {
+      const td = tr.insertCell(); td.className = "n"; td.textContent = fmt(v); });
+    const e = tr.insertCell(); e.className = "n"; e.textContent = pct(p.er);
+    const l = tr.insertCell(); const a = document.createElement("a");
+    if (/^https:\/\//.test(p.permalink || "")) { a.href = p.permalink; a.textContent = "Open"; a.target = "_blank"; a.rel = "noopener"; l.appendChild(a); }
+  });
+  if (!top.length) t.insertRow().insertCell().textContent = "No posts in this range yet.";
+}
+
+function showUpdated() {
+  const times = state.account.map(r => r.fetched_at).filter(Boolean).sort();
+  const el = document.getElementById("updated"), banner = document.getElementById("stale");
+  if (!times.length) { el.textContent = "No data yet"; return; }
+  const t = new Date(times[times.length - 1]);
+  const hrs = (Date.now() - t) / 36e5;
+  el.textContent = `Last updated ${t.toLocaleString()}`;
+  if (hrs > STALE_HOURS) {
+    banner.style.display = "block";
+    banner.textContent = `Data is ${Math.round(hrs)} hours old. The collector may have stopped; check the GitHub Actions tab.`;
+  }
+}
+
+document.getElementById("range").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.days = +b.dataset.d;
+  document.querySelectorAll("#range button").forEach(x => x.classList.toggle("on", x === b));
+  render();
+});
+
+Promise.all([load("account_daily.csv"), load("media.csv"), load("media_metrics.csv")])
+  .then(([a, m, s]) => {
+    state.account = a; state.media = m; state.metrics = s;
+    showUpdated(); render();
+  })
+  .catch(() => {
+    document.getElementById("app").innerHTML = `<div class="err">Couldn't load data files. Run the collector first.</div>`;
+    document.getElementById("updated").textContent = "";
+  });
+
+// refresh automatically while the page stays open
+setInterval(() => Promise.all([load("account_daily.csv"), load("media.csv"), load("media_metrics.csv")])
+  .then(([a, m, s]) => { state.account = a; state.media = m; state.metrics = s; showUpdated(); render(); }), 10 * 60 * 1000);
+</script>
+</body>
+</html>
