@@ -38,6 +38,6 @@ python -m http.server 8765   # open http://localhost:8765
   demo mode have been tested.
 
 ## Brand (Atlas House Brand Book 2.1)
-- Colours and the type scale follow pages 21-26 of the book. The dashboard is Brown-on-Peach only (no dark mode).
-- **Logo:** the header uses the compact mark, default version at the Regular weight (book p.18): `assets/compact.svg`. Never redraw the mark or the star.
+- Colours and the type scale follow pages 21-26 of the book. The dashboard is a single dark surface: Night ground, Peach text, Sirius gold for data and links (book p.30).
+- **Logo:** the header uses the compact mark, reverse version at the Regular weight (book p.18, Peach on Night): `assets/compact-reverse.svg`. Never redraw the mark or the star.
 - **Benzin:** the page uses Unbounded as a stand-in. The brand book lists the Benzin web licence as an open decision, so do not add the font files to this public repo until it is confirmed. Then add an `@font-face` for "Benzin" and it replaces the stand-in.

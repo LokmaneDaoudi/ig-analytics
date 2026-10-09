@@ -9,200 +9,220 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Unbounded:wght@500;600;700&display=swap">
 <!-- Benzin: once the licence covers web embedding, add an @font-face for "Benzin" (files in /fonts); it replaces Unbounded via --font-display. -->
 <style>
-  /* Atlas House Brand Book 2.1 palette. Data colours: Night is primary, Clay is the comparison. Never three categories in one chart. */
+  /* Atlas House Brand Book 2.1, dark surface: Night ground, Peach text, Sirius links and data (Sirius is allowed on dark grounds only). */
   :root {
-    color-scheme: light;
-    --brown: #432818; --peach: #FFE4BD; --clay: #D7976B; --night: #17293A; --umber: #7A5C48; --white: #FFFFFF;
+    color-scheme: dark;
+    --night: #17293A; --peach: #FFE4BD; --clay: #D7976B; --sirius: #FFBF00; --brown: #432818;
     --font-display: "Benzin", "Unbounded", system-ui, sans-serif;
     --font-text: "Source Serif 4", Georgia, serif;
-    --rule: color-mix(in srgb, var(--clay) 45%, transparent);
-    --track: color-mix(in srgb, var(--brown) 11%, transparent);
+    --bg: var(--night);
+    --card: color-mix(in srgb, var(--peach) 6%, var(--night));
+    --ink: var(--peach);
+    --muted: color-mix(in srgb, var(--peach) 70%, var(--night));
+    --line: color-mix(in srgb, var(--peach) 16%, transparent);
+    --track: color-mix(in srgb, var(--peach) 14%, transparent);
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
-  body { margin: 0; background: var(--white); color: var(--brown); font: 18px/1.5 var(--font-text); }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 var(--font-text); }
   [hidden] { display: none !important; }
-  :focus-visible { outline: 3px solid var(--night); outline-offset: 2px; border-radius: 4px; }
+  :focus-visible { outline: 3px solid var(--sirius); outline-offset: 2px; border-radius: 4px; }
   button { font: inherit; color: inherit; }
-  .muted { color: var(--umber); }
+  a { color: var(--sirius); text-underline-offset: 3px; }
+  .muted { color: var(--muted); }
   b { font-weight: 600; }
 
-  .shell { max-width: 1240px; margin: 0 auto; padding: 24px 16px 64px; display: grid; grid-template-columns: 308px minmax(0, 1fr); gap: 48px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 64px; }
 
-  /* left column */
-  .rail { position: sticky; top: 24px; align-self: start; max-height: calc(100vh - 48px); overflow-y: auto; background: var(--peach); border-radius: 16px; padding: 24px; }
-  .brand { display: flex; gap: 14px; align-items: center; margin-bottom: 20px; }
+  /* top bar */
+  .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+  .brand { display: flex; gap: 14px; align-items: center; }
   .brand img { width: 48px; height: 48px; display: block; flex: none; }
-  .eyebrow { font-size: 14px; font-weight: 600; color: var(--umber); line-height: 1.2; }
-  h1 { font: 600 20px/1.15 var(--font-display); margin: 2px 0 0; }
-  .range { display: grid; grid-template-columns: repeat(3, 1fr); border: 2px solid var(--brown); border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
-  .range button { background: transparent; border: 0; padding: 10px 4px; cursor: pointer; font-size: 15px; font-weight: 600; min-height: 44px; }
-  .range button + button { border-left: 2px solid var(--brown); }
-  .range button[aria-pressed="true"] { background: var(--brown); color: var(--peach); }
-  .hero-stat .k { font-size: 14px; font-weight: 600; color: var(--umber); }
-  .hero-stat .big { font: 600 44px/1.05 var(--font-display); letter-spacing: -.02em; margin: 4px 0 6px; font-variant-numeric: lining-nums; }
-  .hero-stat .delta { font-size: 16px; }
-  .stats { margin: 20px 0 0; display: grid; grid-template-columns: 1fr; }
-  .stats .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; border-top: 1px solid var(--rule); }
-  .stats dt { font-size: 15px; color: var(--umber); }
-  .stats dd { margin: 0; text-align: right; font-weight: 600; font-size: 18px; font-variant-numeric: lining-nums tabular-nums; }
-  .stats dd .sub { display: block; font-weight: 400; font-size: 13px; color: var(--umber); }
-  .updated { font-size: 14px; color: var(--umber); margin: 16px 0 0; }
-  .banner { background: var(--brown); color: var(--peach); padding: 12px 14px; border-radius: 10px; margin-top: 14px; font-size: 14px; }
+  .eyebrow { font-size: 14px; font-weight: 600; color: var(--muted); line-height: 1.2; }
+  h1 { font: 600 22px/1.15 var(--font-display); margin: 2px 0 0; letter-spacing: -.01em; }
+  .controls { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .updated { font-size: 14px; color: var(--muted); }
+  .range { display: grid; grid-template-columns: repeat(3, 1fr); border: 2px solid var(--peach); border-radius: 10px; overflow: hidden; }
+  .range button { background: transparent; border: 0; white-space: nowrap; padding: 9px 16px; cursor: pointer; font-size: 15px; font-weight: 600; min-height: 44px; }
+  .range button + button { border-left: 2px solid var(--peach); }
+  .range button[aria-pressed="true"] { background: var(--sirius); color: var(--night); }
+  .banner { background: var(--sirius); color: var(--night); padding: 12px 16px; border-radius: 10px; margin: -8px 0 24px; font-size: 15px; font-weight: 600; }
 
-  /* sections */
-  main section { padding-bottom: 48px; margin-bottom: 48px; border-bottom: 1px solid var(--rule); }
-  main section:last-of-type { border-bottom: 0; margin-bottom: 0; }
-  h2.q { font: 600 24px/1.2 var(--font-display); margin: 0 0 10px; letter-spacing: -.01em; }
-  .lead { margin: 0 0 24px; max-width: 65ch; }
-  .lead b { font-weight: 600; }
-  .sub-h { font-size: 15px; font-weight: 600; color: var(--umber); margin: 0 0 12px; }
-  .empty { background: var(--peach); border-radius: 12px; padding: 18px 20px; max-width: 65ch; }
-  .empty b { display: block; }
-  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; }
-  .three { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px; }
+  /* sections and cards */
+  section { margin-bottom: 44px; }
+  h2 { font: 600 20px/1.2 var(--font-display); margin: 0 0 6px; letter-spacing: -.01em; }
+  .lead { margin: 0 0 16px; color: var(--muted); max-width: 70ch; }
+  .lead b { color: var(--ink); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .row2 { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; }
+  .cols3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px; }
+  .empty { padding: 4px 0; color: var(--muted); max-width: 60ch; }
+  .empty b { display: block; color: var(--ink); }
+  .sub-h { font-size: 14px; font-weight: 600; color: var(--muted); margin: 0 0 10px; }
+
+  /* at a glance tiles */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 12px; display: flex; flex-direction: column; min-width: 0; }
+  .tile .lab { font-size: 14px; font-weight: 600; color: var(--muted); }
+  .tile .val { font: 600 34px/1.1 var(--font-display); letter-spacing: -.02em; margin: 6px 0 4px; font-variant-numeric: lining-nums; white-space: nowrap; }
+  .tile .dl { font-size: 14px; color: var(--muted); min-height: 21px; }
+  .chg { font-weight: 600; white-space: nowrap; }
+  .chg.up { color: var(--sirius); } .chg.down { color: var(--clay); } .chg.flat { color: var(--ink); }
+  .spark { height: 36px; margin-top: 10px; }
+  .spark svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .spark polyline { fill: none; stroke: var(--sirius); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+  .spark .base { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
 
   /* split bars */
-  .split { margin-bottom: 22px; }
+  .split { margin-bottom: 18px; }
   .split-h { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
-  .split-h span:last-child { font-weight: 400; color: var(--umber); }
+  .split-h span:last-child { font-weight: 400; color: var(--muted); }
   .bar { display: flex; height: 40px; border-radius: 10px; overflow: hidden; background: var(--track); }
-  .seg { display: flex; align-items: center; padding: 0 12px; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; border-right: 3px solid var(--white); font-variant-numeric: lining-nums; }
+  .seg { display: flex; align-items: center; padding: 0 12px; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; border-right: 3px solid var(--card); font-variant-numeric: lining-nums; color: var(--night); }
   .seg:last-child { border-right: 0; }
-  .seg.a { background: var(--night); color: var(--peach); }
-  .seg.b { background: var(--clay); color: var(--brown); }
-  .keys { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 14px; margin-top: 8px; }
+  .seg.a { background: var(--clay); }
+  .seg.b { background: var(--sirius); }
+  .keys { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 14px; margin-top: 8px; color: var(--muted); }
   .key i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
-  .key i.a { background: var(--night); } .key i.b { background: var(--clay); }
+  .key i.a { background: var(--clay); } .key i.b { background: var(--sirius); }
 
   /* charts */
   .chart-h { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 15px; font-weight: 600; margin-bottom: 8px; flex-wrap: wrap; }
-  .chart-h .v { font-weight: 400; color: var(--umber); }
-  .chart { position: relative; height: 220px; }
-  figure { margin: 0; }
+  .chart-h .v { font-weight: 400; color: var(--muted); }
+  .chart { position: relative; height: 210px; }
+  figure { margin: 0; min-width: 0; }
 
   /* ranked rows */
-  .rank { display: grid; grid-template-columns: minmax(96px, 128px) 1fr 64px; gap: 12px; align-items: center; padding: 8px 0; }
+  .rank { display: grid; grid-template-columns: minmax(96px, 130px) 1fr 64px; gap: 12px; align-items: center; padding: 8px 0; }
   .rank .n { line-height: 1.2; }
-  .rank .n small { display: block; font-size: 13px; color: var(--umber); }
+  .rank .n small { display: block; font-size: 13px; color: var(--muted); }
   .rank .track { height: 14px; background: var(--track); border-radius: 7px; overflow: hidden; }
-  .rank .fill { height: 100%; background: var(--night); border-radius: 7px; }
+  .rank .fill { height: 100%; background: var(--sirius); border-radius: 7px; }
+  .rank.alt .fill { background: var(--clay); }
   .rank .v { text-align: right; font-weight: 600; font-variant-numeric: lining-nums tabular-nums; }
+  .divider { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 
-  /* posts */
-  .tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .tools .lbl { font-size: 15px; color: var(--umber); margin-right: 4px; }
-  .chip { border: 2px solid var(--brown); background: transparent; border-radius: 999px; padding: 6px 14px; font-size: 15px; font-weight: 600; cursor: pointer; min-height: 40px; }
-  .chip[aria-pressed="true"] { background: var(--brown); color: var(--peach); }
-  .posts { list-style: none; margin: 0; padding: 0; }
-  .posts li { border-top: 1px solid var(--rule); }
-  .post { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 14px; padding: 16px 4px; color: inherit; text-decoration: none; align-items: start; }
-  a.post:hover .cap { text-decoration: underline; text-underline-offset: 3px; }
-  .post .rk { font: 600 16px/1.5 var(--font-display); color: var(--umber); }
-  .post .cap { font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; }
-  .post .meta { font-size: 14px; color: var(--umber); margin-top: 4px; }
-  .post .metric { text-align: right; }
-  .post .metric .num { font: 600 24px/1.1 var(--font-display); font-variant-numeric: lining-nums; }
-  .post .metric .lab { font-size: 13px; color: var(--umber); }
-  .more { margin-top: 12px; }
+  /* posts table */
+  .tablewrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+  table { border-collapse: collapse; width: 100%; min-width: 880px; font-variant-numeric: lining-nums tabular-nums; }
+  th, td { padding: 12px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; vertical-align: top; font-size: 15px; }
+  tr:last-child td { border-bottom: 0; }
+  th { font-size: 14px; font-weight: 600; color: var(--muted); padding: 0; }
+  th button { background: none; border: 0; cursor: pointer; padding: 14px 10px; width: 100%; text-align: right; font-weight: 600; color: var(--muted); }
+  th button:hover { color: var(--ink); }
+  th[aria-sort] button { color: var(--sirius); }
+  th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--card); z-index: 1; min-width: 250px; max-width: 320px; white-space: normal; }
+  th:first-child { padding: 14px 12px; }
+  td:first-child { padding: 12px 12px; box-shadow: 1px 0 0 var(--line); }
+  .cap { font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--ink); text-decoration: none; }
+  a.cap:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  td.best { color: var(--sirius); font-weight: 600; }
+  td .mini { height: 4px; background: var(--track); border-radius: 2px; margin-top: 6px; margin-left: auto; width: 72px; overflow: hidden; }
+  td .mini i { display: block; height: 100%; background: var(--sirius); }
+  .more { margin-top: 12px; background: transparent; border: 2px solid var(--peach); border-radius: 999px; padding: 8px 18px; font-weight: 600; cursor: pointer; min-height: 44px; }
 
   .skeleton { height: 14px; border-radius: 7px; background: var(--track); margin: 12px 0; }
   @media (prefers-reduced-motion: no-preference) { .skeleton { animation: pulse 1.4s ease-in-out infinite; } }
   @keyframes pulse { 50% { opacity: .45; } }
-
-  footer { grid-column: 1 / -1; padding-top: 20px; border-top: 2px solid var(--clay); color: var(--umber); font-size: 14px; }
+  footer { padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
 
   @media (max-width: 900px) {
-    .shell { grid-template-columns: minmax(0, 1fr); gap: 32px; padding-top: 16px; }
-    .rail { position: static; padding: 20px; max-height: none; overflow: visible; }
-    .stats { grid-template-columns: 1fr 1fr; gap: 0 20px; }
-    .stats .row { flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 2px; }
-    .stats dd { text-align: left; }
-    .hero-stat .big { font-size: 40px; }
-    h2.q { font-size: 21px; }
-    .chart { height: 200px; }
-    .post { grid-template-columns: 24px minmax(0, 1fr); }
-    .post .metric { grid-column: 2; text-align: left; display: flex; align-items: baseline; gap: 8px; }
-    .post .metric .num { font-size: 20px; }
+    .row2 { grid-template-columns: minmax(0, 1fr); }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .tile { padding: 14px 14px 10px; }
+    .tile .val { font-size: 26px; }
+    .controls { width: 100%; flex-direction: column-reverse; align-items: stretch; gap: 10px; }
+    .range { width: 100%; }
+    .updated { text-align: left; }
+    .chart { height: 190px; }
     .rank { grid-template-columns: minmax(88px, 110px) 1fr 56px; gap: 10px; }
+    th:first-child, td:first-child { min-width: 190px; max-width: 190px; }
+    table { min-width: 800px; }
   }
 </style>
 </head>
 <body>
-<div class="shell">
-  <aside class="rail" aria-label="Summary">
+<div class="wrap">
+  <header class="top">
     <div class="brand">
-      <img src="assets/compact.svg" alt="" width="48" height="48" onerror="this.remove()">
+      <img src="assets/compact-reverse.svg" alt="" width="48" height="48" onerror="this.remove()">
       <div><div class="eyebrow">Atlas House</div><h1>Instagram analytics</h1></div>
     </div>
-    <div class="range" id="range" role="group" aria-label="Time range">
-      <button data-d="7" aria-pressed="false">7 days</button>
-      <button data-d="30" aria-pressed="true">30 days</button>
-      <button data-d="90" aria-pressed="false">90 days</button>
+    <div class="controls">
+      <span class="updated" id="updated">Loading…</span>
+      <div class="range" id="range" role="group" aria-label="Time range">
+        <button data-d="7" aria-pressed="false">7 days</button>
+        <button data-d="30" aria-pressed="true">30 days</button>
+        <button data-d="90" aria-pressed="false">90 days</button>
+      </div>
     </div>
-    <div class="hero-stat">
-      <div class="k">Followers</div>
-      <div class="big" id="followers">–</div>
-      <div class="delta" id="followersDelta"></div>
-    </div>
-    <dl class="stats" id="stats"></dl>
-    <p class="updated" id="updated">Loading…</p>
-    <div class="banner" id="stale" role="status" hidden></div>
-  </aside>
+  </header>
+  <div class="banner" id="stale" role="status" hidden></div>
 
-  <main id="app">
-    <div id="loading"><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:75%"></div></div>
-    <div id="loaded" hidden>
-      <section aria-labelledby="hGrowth">
-        <h2 class="q" id="hGrowth">Is growth coming from new people?</h2>
-        <p class="lead" id="growthLead"></p>
-        <div class="empty" id="growthEmpty" hidden><b>This fills in after the next update.</b>The split between followers and non-followers arrives within two hours of the next scheduled run.</div>
-        <div id="growthBody">
-          <div id="splits"></div>
-          <figure>
-            <div class="chart-h"><span>Reach each day</span><span class="keys" style="margin:0"><span class="key"><i class="a"></i>Followers</span><span class="key"><i class="b"></i>Non-followers</span></span></div>
-            <div class="chart"><canvas id="cSource" role="img" aria-label="Daily reach, split between followers and non-followers"></canvas></div>
-          </figure>
+  <div id="loading"><div class="skeleton" style="width:50%"></div><div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:70%"></div></div>
+
+  <main id="loaded" hidden>
+    <section aria-labelledby="hGlance">
+      <h2 id="hGlance">At a glance</h2>
+      <p class="lead" id="glanceLead"></p>
+      <div class="tiles" id="tiles"></div>
+    </section>
+
+    <section aria-labelledby="hMix">
+      <div class="row2">
+        <div>
+          <h2 id="hMix">Where your reach comes from</h2>
+          <p class="lead" id="growthLead"></p>
+          <div class="card">
+            <div class="empty" id="growthEmpty" hidden><b>This fills in after the next update.</b>The split between followers and non-followers arrives within two hours of the next scheduled run.</div>
+            <div id="growthBody">
+              <div id="splits"></div>
+              <figure>
+                <div class="chart-h"><span>Reach each day</span><span class="keys" style="margin:0"><span class="key"><i class="a"></i>Followers</span><span class="key"><i class="b"></i>Non-followers</span></span></div>
+                <div class="chart"><canvas id="cSource" role="img" aria-label="Daily reach, split between followers and non-followers"></canvas></div>
+              </figure>
+            </div>
+          </div>
         </div>
-      </section>
-
-      <section aria-labelledby="hTrack">
-        <h2 class="q" id="hTrack">Is the account on track?</h2>
-        <p class="lead" id="trackLead"></p>
-        <div class="three">
-          <figure><div class="chart-h"><span>Followers</span><span class="v" id="mFollowers"></span></div><div class="chart"><canvas id="cFollowers" role="img" aria-label="Followers over time"></canvas></div></figure>
-          <figure><div class="chart-h"><span>Reach each day</span><span class="v" id="mReach"></span></div><div class="chart"><canvas id="cReach" role="img" aria-label="Reach each day"></canvas></div></figure>
-          <figure><div class="chart-h"><span>Views each day</span><span class="v" id="mViews"></span></div><div class="chart"><canvas id="cViews" role="img" aria-label="Views each day"></canvas></div></figure>
+        <div>
+          <h2>What to make more of</h2>
+          <p class="lead" id="formatLead"></p>
+          <div class="card">
+            <h3 class="sub-h">Average reach per post, by format</h3>
+            <div id="rankFormat"></div>
+            <div id="shareCol"><hr class="divider"><h3 class="sub-h">Share of reach, by content type</h3><div id="rankType"></div></div>
+          </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section aria-labelledby="hFormats">
-        <h2 class="q" id="hFormats">Which format should you make more of?</h2>
-        <p class="lead" id="formatLead"></p>
-        <div class="two">
-          <div><h3 class="sub-h">Average reach per post</h3><div id="rankFormat"></div></div>
-          <div id="shareCol"><h3 class="sub-h">Share of reach by content type</h3><div id="rankType"></div></div>
-        </div>
-      </section>
+    <section aria-labelledby="hGrowth">
+      <h2 id="hGrowth">Growth over time</h2>
+      <p class="lead" id="trackLead"></p>
+      <div class="card cols3">
+        <figure><div class="chart-h"><span>Followers</span><span class="v" id="mFollowers"></span></div><div class="chart"><canvas id="cFollowers" role="img" aria-label="Followers over time"></canvas></div></figure>
+        <figure><div class="chart-h"><span>Reach each day</span><span class="v" id="mReach"></span></div><div class="chart"><canvas id="cReach" role="img" aria-label="Reach each day"></canvas></div></figure>
+        <figure><div class="chart-h"><span>Views each day</span><span class="v" id="mViews"></span></div><div class="chart"><canvas id="cViews" role="img" aria-label="Views each day"></canvas></div></figure>
+      </div>
+    </section>
 
-      <section aria-labelledby="hPosts">
-        <h2 class="q" id="hPosts">Which posts should you learn from?</h2>
-        <p class="lead" id="postsLead"></p>
-        <div class="tools" role="group" aria-label="Sort posts by" id="sorts"></div>
-        <ol class="posts" id="posts"></ol>
-        <button class="chip more" id="more" hidden></button>
-      </section>
+    <section aria-labelledby="hPosts">
+      <h2 id="hPosts">Top posts</h2>
+      <p class="lead" id="postsLead"></p>
+      <div class="tablewrap"><table id="postsTable"><thead id="thead"></thead><tbody id="posts"></tbody></table></div>
+      <button class="more" id="more" hidden></button>
+    </section>
 
-      <section aria-labelledby="hAud" id="sAud">
-        <h2 class="q" id="hAud">Who follows you?</h2>
-        <p class="lead muted" id="audLead"></p>
-        <div class="three">
-          <div><h3 class="sub-h">Top countries</h3><div id="audCountry"></div></div>
-          <div><h3 class="sub-h">Age</h3><div id="audAge"></div></div>
-          <div><h3 class="sub-h">Gender</h3><div id="audGender"></div></div>
-        </div>
-      </section>
-    </div>
+    <section aria-labelledby="hAud" id="sAud">
+      <h2 id="hAud">Who follows you</h2>
+      <p class="lead" id="audLead"></p>
+      <div class="card cols3">
+        <div><h3 class="sub-h">Top countries</h3><div id="audCountry"></div></div>
+        <div><h3 class="sub-h">Age</h3><div id="audAge"></div></div>
+        <div><h3 class="sub-h">Gender</h3><div id="audGender"></div></div>
+      </div>
+    </section>
   </main>
 
   <footer>Algerian literature in English. · atlashouse.net</footer>
@@ -212,21 +232,16 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
 const STALE_HOURS = 6;
-const NIGHT = "#17293A", CLAY = "#D7976B", UMBER = "#7A5C48", RULE = "rgba(67,40,24,.12)";
-const SORTS = [
-  { key: "reach", label: "Reach", metric: "reach" },
-  { key: "er", label: "Engagement", metric: "er" },
-  { key: "saves", label: "Saves", metric: "saves" },
-  { key: "shares", label: "Shares", metric: "shares" },
-  { key: "reposts", label: "Reposts", metric: "reposts" }
-];
+const SIRIUS = "#FFBF00", CLAY = "#D7976B", PEACH = "#FFE4BD", NIGHT = "#17293A";
+const MUTED = "rgba(255,228,189,.72)", GRID = "rgba(255,228,189,.14)";
+const COLS = [["reach", "Reach"], ["views", "Views"], ["likes", "Likes"], ["comments", "Comments"], ["saves", "Saves"], ["shares", "Shares"], ["reposts", "Reposts"], ["er", "Engagement"]];
 const PLURAL = { Reel: "Reels", Carousel: "Carousels", Image: "Images", Video: "Videos" };
-const state = { days: 30, sort: "reach", showAll: false, account: [], media: [], metrics: [], audience: [] };
+const state = { days: 30, sort: "reach", dir: -1, showAll: false, account: [], media: [], metrics: [], audience: [] };
 const charts = {};
 
 Chart.defaults.font.family = '"Source Serif 4", Georgia, serif';
 Chart.defaults.font.size = 13;
-Chart.defaults.color = UMBER;
+Chart.defaults.color = MUTED;
 
 const $ = id => document.getElementById(id);
 const fmt = n => n == null || isNaN(n) ? "–" : Math.round(n).toLocaleString("en");
@@ -252,8 +267,7 @@ function formatOf(m) {
   if (m.media_type === "VIDEO") return "Video";
   return m.media_product_type || m.media_type || "Other";
 }
-
-function posts() {
+function allPosts() {
   const latest = {};
   for (const r of state.metrics) if (!latest[r.id] || r.fetched_at > latest[r.id].fetched_at) latest[r.id] = r;
   return state.media.filter(m => latest[m.id]).map(m => {
@@ -262,87 +276,151 @@ function posts() {
     return { ...m, ...s, ts, format: formatOf(m), er: s.reach ? eng / s.reach : null };
   });
 }
-const inRange = (items, getDate) => { const cutoff = Date.now() - state.days * 864e5; return items.filter(i => getDate(i).getTime() >= cutoff); };
+
+/* ---------- helpers ---------- */
+const DAY = 864e5;
+const sumOf = (rows, k) => rows.reduce((a, r) => a + (+r[k] || 0), 0);
+const daysWith = (rows, k) => rows.filter(r => r[k] != null).length || 1;
+const avgDay = (rows, k) => sumOf(rows, k) / daysWith(rows, k);
+const hasData = (rows, k) => rows.some(r => r[k] != null);
+const dateOf = r => new Date(r.date + "T00:00:00Z").getTime();
+
+function windows() {
+  const now = Date.now(), d = state.days;
+  const acct = state.account.filter(r => dateOf(r) >= now - d * DAY);
+  const prevAcctAll = state.account.filter(r => dateOf(r) >= now - 2 * d * DAY && dateOf(r) < now - d * DAY);
+  const prevAcct = prevAcctAll.length >= d * 0.8 ? prevAcctAll : null;
+  const all = allPosts();
+  const ps = all.filter(p => p.ts.getTime() >= now - d * DAY);
+  const earliest = all.length ? Math.min(...all.map(p => p.ts.getTime())) : Infinity;
+  const prevPs = earliest <= now - 2 * d * DAY ? all.filter(p => p.ts.getTime() >= now - 2 * d * DAY && p.ts.getTime() < now - d * DAY) : null;
+  return { acct, prevAcct, ps, prevPs };
+}
+
+function change(cur, prev, label) {
+  if (prev == null || !isFinite(prev) || prev === 0 || cur == null) return null;
+  const p = (cur - prev) / prev;
+  if (Math.abs(p) < 0.005) return `<span class="chg flat">No change</span> vs previous ${state.days} days`;
+  return `<span class="chg ${p > 0 ? "up" : "down"}">${p > 0 ? "▲" : "▼"} ${Math.abs(p * 100).toFixed(Math.abs(p) >= 0.1 ? 0 : 1)}%</span> vs previous ${state.days} days`;
+}
+
+function spark(values) {
+  const v = values.map(x => (x == null ? null : +x)), nums = v.filter(x => x != null);
+  if (nums.length < 2) return "";
+  const lo = Math.min(...nums), hi = Math.max(...nums), span = hi - lo || 1;
+  const pts = v.map((x, i) => x == null ? null : `${(i / (v.length - 1) * 100).toFixed(2)},${(30 - (x - lo) / span * 28 - 1).toFixed(2)}`).filter(Boolean).join(" ");
+  return `<div class="spark" aria-hidden="true"><svg viewBox="0 0 100 30" preserveAspectRatio="none"><line class="base" x1="0" y1="29.5" x2="100" y2="29.5"/><polyline points="${pts}"/></svg></div>`;
+}
 
 /* ---------- charts ---------- */
 function chartOpts(stacked) {
   return { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
-    plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => shortDate(i[0].label) } } },
+    plugins: { legend: { display: false }, tooltip: { backgroundColor: PEACH, titleColor: NIGHT, bodyColor: NIGHT, displayColors: false, callbacks: { title: i => shortDate(i[0].label) } } },
     scales: {
-      x: { stacked, grid: { display: false }, ticks: { maxTicksLimit: 5, maxRotation: 0, callback(v) { return shortDate(this.getLabelForValue(v)); } } },
-      y: { stacked, grid: { color: RULE }, border: { display: false }, ticks: { maxTicksLimit: 5, callback: v => v.toLocaleString("en") } }
+      x: { stacked, grid: { display: false }, border: { display: false }, ticks: { maxTicksLimit: 5, maxRotation: 0, callback(v) { return shortDate(this.getLabelForValue(v)); } } },
+      y: { stacked, grid: { color: GRID }, border: { display: false }, ticks: { maxTicksLimit: 5, callback: v => v.toLocaleString("en") } }
     } };
 }
 function draw(id, config) { charts[id]?.destroy(); charts[id] = new Chart($(id), config); }
 const line = (id, labels, data) => draw(id, { type: "line", options: chartOpts(false),
-  data: { labels, datasets: [{ data, borderColor: NIGHT, backgroundColor: NIGHT, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: .25 }] } });
+  data: { labels, datasets: [{ data, borderColor: SIRIUS, backgroundColor: SIRIUS, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: .25 }] } });
 const bars = (id, labels, data) => draw(id, { type: "bar", options: chartOpts(false),
-  data: { labels, datasets: [{ data, backgroundColor: NIGHT, borderRadius: 2 }] } });
+  data: { labels, datasets: [{ data, backgroundColor: SIRIUS, borderRadius: 2 }] } });
 
 /* ---------- render ---------- */
 function render() {
-  const acct = inRange(state.account, r => new Date(r.date + "T00:00:00Z"));
-  const ps = inRange(posts(), p => p.ts);
-  renderRail(acct, ps);
-  renderGrowth(acct);
-  renderTrack(acct);
-  renderFormats(ps, acct);
-  renderPosts(ps);
+  const w = windows();
+  renderTiles(w);
+  renderGrowthMix(w.acct);
+  renderFormats(w.ps, w.acct);
+  renderTrack(w.acct);
+  renderPosts(w.ps);
   renderAudience();
 }
 
-const sumOf = (acct, k) => acct.reduce((a, r) => a + (+r[k] || 0), 0);
-const daysWith = (acct, k) => acct.filter(r => r[k] != null).length || 1;
-const avgDay = (acct, k) => sumOf(acct, k) / daysWith(acct, k);
-const hasData = (acct, k) => acct.some(r => r[k] != null);
-
-function renderRail(acct, ps) {
-  const first = acct.find(r => r.followers != null), last = [...acct].reverse().find(r => r.followers != null);
+function renderTiles({ acct, prevAcct, ps, prevPs }) {
+  const d = state.days;
+  const f = acct.filter(r => r.followers != null);
+  const first = f[0], last = f[f.length - 1];
   const growth = first && last ? last.followers - first.followers : null;
-  $("followers").textContent = fmt(last?.followers);
-  $("followersDelta").innerHTML = growth == null ? "" :
-    `<b>${growth >= 0 ? "+" : "−"}${fmt(Math.abs(growth))}</b> in ${state.days} days`;
-  const ers = ps.map(p => p.er).filter(x => x != null);
-  const avgER = ers.length ? ers.reduce((a, b) => a + b, 0) / ers.length : null;
-  const avgPost = k => ps.length ? ps.reduce((a, p) => a + (+p[k] || 0), 0) / ps.length : null;
+  const ers = a => { const x = a.map(p => p.er).filter(v => v != null); return x.length ? x.reduce((s, v) => s + v, 0) / x.length : null; };
+  const er = ers(ps), erPrev = prevPs ? ers(prevPs) : null;
+  const shares = sumOf(ps, "shares"), sharesPrev = prevPs ? sumOf(prevPs, "shares") : null;
   const reposts = hasData(acct, "reposts");
-  const rows = [
-    ["Posts published", fmt(ps.length), `${(ps.length / state.days * 7).toFixed(1)} a week`],
-    ["Average reach a day", fmt(avgDay(acct, "reach")), ""],
-    ["Average views a day", fmt(avgDay(acct, "views")), ""],
-    ["Average reach a post", fmt(avgPost("reach")), ""],
-    ["Profile visits", fmt(sumOf(acct, "profile_views")), ""],
-    ["Engagement", pct(avgER), ""],
-    ["Shares", fmt(ps.reduce((a, p) => a + (+p.shares || 0), 0)), ""],
-    ["Reposts", reposts ? fmt(sumOf(acct, "reposts")) : "–", reposts ? "" : "not available yet"]
+  const prevAvg = k => prevAcct && hasData(prevAcct, k) ? avgDay(prevAcct, k) : null;
+  const prevSum = k => prevAcct && hasData(prevAcct, k) ? sumOf(prevAcct, k) : null;
+
+  const erDelta = er != null && erPrev != null
+    ? (() => { const pts = (er - erPrev) * 100; return Math.abs(pts) < 0.05 ? `<span class="chg flat">No change</span> vs previous ${d} days` : `<span class="chg ${pts > 0 ? "up" : "down"}">${pts > 0 ? "▲" : "▼"} ${Math.abs(pts).toFixed(1)} points</span> vs previous ${d} days`; })() : null;
+
+  const tiles = [
+    { lab: "Followers", val: fmt(last?.followers), dl: growth == null ? "" : `<span class="chg ${growth >= 0 ? "up" : "down"}">${growth >= 0 ? "▲ +" : "▼ −"}${fmt(Math.abs(growth))}</span> in ${d} days`, sp: spark(f.map(r => r.followers)) },
+    { lab: "Reach a day", val: fmt(avgDay(acct, "reach")), dl: change(avgDay(acct, "reach"), prevAvg("reach")) || "average per day", sp: spark(acct.map(r => r.reach)) },
+    { lab: "Views a day", val: fmt(avgDay(acct, "views")), dl: change(avgDay(acct, "views"), prevAvg("views")) || "average per day", sp: spark(acct.map(r => r.views)) },
+    { lab: "Profile visits", val: fmt(sumOf(acct, "profile_views")), dl: change(sumOf(acct, "profile_views"), prevSum("profile_views")) || `${fmt(avgDay(acct, "profile_views"))} a day`, sp: spark(acct.map(r => r.profile_views)) },
+    { lab: "Posts published", val: fmt(ps.length), dl: change(ps.length, prevPs ? prevPs.length : null) || `${(ps.length / d * 7).toFixed(1)} a week`, sp: "" },
+    { lab: "Engagement", val: pct(er), dl: erDelta || "interactions ÷ reach", sp: "" },
+    { lab: "Shares", val: fmt(shares), dl: change(shares, sharesPrev) || `${fmt(ps.length ? shares / ps.length : null)} a post`, sp: "" },
+    { lab: "Reposts", val: reposts ? fmt(sumOf(acct, "reposts")) : "–", dl: reposts ? (change(sumOf(acct, "reposts"), prevSum("reposts")) || `${fmt(avgDay(acct, "reposts"))} a day`) : "not available yet", sp: reposts ? spark(acct.map(r => r.reposts)) : "" }
   ];
-  $("stats").innerHTML = rows.map(([k, v, s]) => `<div class="row"><dt>${k}</dt><dd>${v}${s ? `<span class="sub">${s}</span>` : ""}</dd></div>`).join("");
+  $("tiles").innerHTML = tiles.map(t => `<div class="tile"><div class="lab">${t.lab}</div><div class="val">${t.val}</div><div class="dl">${t.dl || ""}</div>${t.sp}</div>`).join("");
+  $("glanceLead").textContent = `The last ${d} days${prevAcct ? ", compared with the ${d} days before".replace("${d}", d) : ""}. Posts published exclude stories.`;
 }
 
 function splitRow(label, aVal, bVal, perDay) {
   const t = aVal + bVal;
   if (!t) return "";
   const pa = aVal / t * 100, pb = 100 - pa;
-  const inner = (name, v, p) => p >= 22 ? `${name} ${Math.round(p)}%` : p >= 9 ? `${Math.round(p)}%` : "";
+  const inner = (name, p) => p >= 24 ? `${name} ${Math.round(p)}%` : p >= 9 ? `${Math.round(p)}%` : "";
   return `<div class="split"><div class="split-h"><span>${label}</span><span>${fmt(perDay)} a day</span></div>
     <div class="bar" role="img" aria-label="${label}: followers ${Math.round(pa)} percent, non-followers ${Math.round(pb)} percent">
-      <div class="seg a" style="width:${pa}%">${inner("Followers", aVal, pa)}</div><div class="seg b" style="width:${pb}%">${inner("Non-followers", bVal, pb)}</div></div>
+      <div class="seg a" style="width:${pa}%">${inner("Followers", pa)}</div><div class="seg b" style="width:${pb}%">${inner("Non-followers", pb)}</div></div>
     <div class="keys"><span class="key"><i class="a"></i>Followers ${fmt(aVal)}</span><span class="key"><i class="b"></i>Non-followers ${fmt(bVal)}</span></div></div>`;
 }
 
-function renderGrowth(acct) {
+function renderGrowthMix(acct) {
   const ok = hasData(acct, "reach_followers");
   $("growthEmpty").hidden = ok; $("growthBody").hidden = !ok;
-  if (!ok) { $("growthLead").textContent = ""; return; }
+  if (!ok) { $("growthLead").textContent = "Followers and non-followers, side by side."; return; }
   const rf = sumOf(acct, "reach_followers"), rn = sumOf(acct, "reach_non_followers");
   const vf = sumOf(acct, "views_followers"), vn = sumOf(acct, "views_non_followers");
-  const share = rn / ((rf + rn) || 1);
-  $("growthLead").innerHTML = `<b>${Math.round(share * 100)}%</b> of your reach in the last ${state.days} days came from people who don't follow you yet.`;
+  $("growthLead").innerHTML = `<b>${Math.round(rn / ((rf + rn) || 1) * 100)}%</b> of your reach came from people who don't follow you yet.`;
   $("splits").innerHTML = splitRow("Reach", rf, rn, avgDay(acct, "reach")) + splitRow("Views", vf, vn, avgDay(acct, "views"));
   const d = acct.filter(r => r.reach_followers != null);
   draw("cSource", { type: "bar", options: chartOpts(true), data: { labels: d.map(r => r.date), datasets: [
-    { label: "Followers", data: d.map(r => r.reach_followers), backgroundColor: NIGHT, borderRadius: 0 },
-    { label: "Non-followers", data: d.map(r => r.reach_non_followers), backgroundColor: CLAY, borderRadius: 0 }] } });
+    { label: "Followers", data: d.map(r => r.reach_followers), backgroundColor: CLAY, borderRadius: 0 },
+    { label: "Non-followers", data: d.map(r => r.reach_non_followers), backgroundColor: SIRIUS, borderRadius: 0 }] } });
+}
+
+function rankRows(items, alt) {
+  const max = Math.max(1, ...items.map(i => i.value));
+  return items.map(i => `<div class="rank${alt ? " alt" : ""}"><div class="n">${esc(i.name)}${i.note ? `<small>${esc(i.note)}</small>` : ""}</div>
+    <div class="track"><div class="fill" style="width:${i.value / max * 100}%"></div></div><div class="v">${esc(i.label)}</div></div>`).join("");
+}
+
+function renderFormats(ps, acct) {
+  const by = {};
+  ps.forEach(p => (by[p.format] ||= []).push(p));
+  const rows = Object.entries(by).map(([f, list]) => {
+    const reach = list.reduce((a, p) => a + (p.reach || 0), 0) / list.length;
+    const ers = list.map(p => p.er).filter(x => x != null);
+    return { f, n: list.length, reach, er: ers.length ? ers.reduce((a, b) => a + b, 0) / ers.length : null };
+  }).sort((a, b) => b.reach - a.reach);
+  if (!rows.length) {
+    $("formatLead").textContent = "No posts in this range. Try 90 days.";
+    $("rankFormat").innerHTML = "";
+  } else {
+    const top = rows[0], low = rows.filter(r => r !== top && r.n >= 2).sort((a, b) => a.reach - b.reach)[0];
+    $("formatLead").innerHTML = top.n >= 2 && low && top.reach / (low.reach || 1) >= 1.2
+      ? `<b>${plural(top.f)}</b> reach <b>${(top.reach / low.reach).toFixed(1)} times</b> as many people as ${plural(low.f).toLowerCase()}.`
+      : `<b>${plural(top.f)}</b> reach the most people.`;
+    $("rankFormat").innerHTML = rankRows(rows.map(r => ({ name: plural(r.f), value: r.reach, label: fmt(r.reach),
+      note: `${r.n} post${r.n > 1 ? "s" : ""}, ${pct(r.er)} engagement` })));
+  }
+  const t = [["Reels", sumOf(acct, "reach_reels")], ["Posts", sumOf(acct, "reach_posts")], ["Stories", sumOf(acct, "reach_stories")]];
+  const total = t.reduce((a, x) => a + x[1], 0);
+  $("shareCol").hidden = !total;
+  if (total) $("rankType").innerHTML = rankRows(t.sort((a, b) => b[1] - a[1]).map(([name, v]) => ({ name, value: v, label: Math.round(v / total * 100) + "%" })), true);
 }
 
 function renderTrack(acct) {
@@ -361,56 +439,28 @@ function renderTrack(acct) {
   $("mViews").textContent = `${fmt(avgDay(acct, "views"))} a day`;
 }
 
-function rankRows(items) {
-  const max = Math.max(1, ...items.map(i => i.value));
-  return items.map(i => `<div class="rank"><div class="n">${esc(i.name)}${i.note ? `<small>${esc(i.note)}</small>` : ""}</div>
-    <div class="track"><div class="fill" style="width:${i.value / max * 100}%"></div></div><div class="v">${esc(i.label)}</div></div>`).join("");
-}
-
-function renderFormats(ps, acct) {
-  const by = {};
-  ps.forEach(p => (by[p.format] ||= []).push(p));
-  const rows = Object.entries(by).map(([f, list]) => {
-    const reach = list.reduce((a, p) => a + (p.reach || 0), 0) / list.length;
-    const ers = list.map(p => p.er).filter(x => x != null);
-    return { f, n: list.length, reach, er: ers.length ? ers.reduce((a, b) => a + b, 0) / ers.length : null };
-  }).sort((a, b) => b.reach - a.reach);
-  if (!rows.length) {
-    $("formatLead").textContent = "No posts in this range. Try 90 days.";
-    $("rankFormat").innerHTML = "";
-  } else {
-    const top = rows[0], low = rows.filter(r => r !== top && r.n >= 2).sort((a, b) => a.reach - b.reach)[0];
-    $("formatLead").innerHTML = top.n >= 2 && low && top.reach / (low.reach || 1) >= 1.2
-      ? `<b>${plural(top.f)}</b> reach <b>${(top.reach / low.reach).toFixed(1)} times</b> as many people as ${plural(low.f).toLowerCase()}: ${fmt(top.reach)} against ${fmt(low.reach)} a post, on average.`
-      : `<b>${plural(top.f)}</b> reach the most people: ${fmt(top.reach)} a post, on average.`;
-    $("rankFormat").innerHTML = rankRows(rows.map(r => ({ name: plural(r.f), value: r.reach, label: fmt(r.reach),
-      note: `${r.n} post${r.n > 1 ? "s" : ""}, ${pct(r.er)} engagement` })));
-  }
-  const t = [["Reels", sumOf(acct, "reach_reels")], ["Posts", sumOf(acct, "reach_posts")], ["Stories", sumOf(acct, "reach_stories")]];
-  const total = t.reduce((a, x) => a + x[1], 0);
-  $("shareCol").hidden = !total;
-  if (total) $("rankType").innerHTML = rankRows(t.sort((a, b) => b[1] - a[1]).map(([name, v]) => ({ name, value: v, label: Math.round(v / total * 100) + "%" })));
-}
-
 function renderPosts(ps) {
-  const s = SORTS.find(x => x.key === state.sort);
-  $("sorts").innerHTML = `<span class="lbl">Sort by</span>` + SORTS.map(x => `<button class="chip" data-s="${x.key}" aria-pressed="${x.key === state.sort}">${x.label}</button>`).join("");
-  const sorted = [...ps].sort((a, b) => (b[s.metric] ?? -1) - (a[s.metric] ?? -1));
-  const shown = state.showAll ? sorted : sorted.slice(0, 8);
-  $("postsLead").innerHTML = ps.length ? `Showing posts from the last ${state.days} days, ranked by ${s.label.toLowerCase()}.` : "No posts in this range. Try 90 days.";
-  $("posts").innerHTML = shown.map((p, i) => {
-    const val = s.key === "er" ? pct(p.er) : fmt(p[s.metric]);
-    const meta = [p.format, p.ts.toLocaleDateString("en", { day: "numeric", month: "short" }),
-      `${fmt(p.views)} views`, `${fmt(p.likes)} likes`, `${fmt(p.saves)} saves`, `${fmt(p.shares)} shares`,
-      p.reposts != null ? `${fmt(p.reposts)} reposts` : null].filter(Boolean).join(" · ");
+  $("thead").innerHTML = `<tr><th scope="col">Post</th>` + COLS.map(([k, l]) =>
+    `<th scope="col"${state.sort === k ? ` aria-sort="${state.dir < 0 ? "descending" : "ascending"}"` : ""}><button data-c="${k}">${l}${state.sort === k ? (state.dir < 0 ? " ▼" : " ▲") : ""}</button></th>`).join("") + `</tr>`;
+  const sorted = [...ps].sort((a, b) => ((a[state.sort] ?? -Infinity) - (b[state.sort] ?? -Infinity)) * state.dir);
+  const shown = state.showAll ? sorted : sorted.slice(0, 10);
+  const best = {}; COLS.forEach(([k]) => { best[k] = Math.max(...ps.map(p => p[k] ?? -Infinity)); });
+  const maxReach = Math.max(1, best.reach);
+  $("postsLead").textContent = ps.length ? `Every metric for each post from the last ${state.days} days. Select a column heading to sort. The best value in each column is gold.` : "No posts in this range. Try 90 days.";
+  $("posts").innerHTML = shown.map(p => {
     const link = /^https:\/\//.test(p.permalink || "");
-    const inner = `<span class="rk">${i + 1}</span><div><div class="cap">${esc(p.caption || "No caption")}</div><div class="meta">${esc(meta)}</div></div>
-      <div class="metric"><div class="num">${val}</div><div class="lab">${s.label.toLowerCase()}</div></div>`;
-    return `<li>${link ? `<a class="post" href="${esc(p.permalink)}" target="_blank" rel="noopener">${inner}</a>` : `<div class="post">${inner}</div>`}</li>`;
+    const cap = esc(p.caption || "No caption");
+    const first = `<td>${link ? `<a class="cap" href="${esc(p.permalink)}" target="_blank" rel="noopener">${cap}</a>` : `<span class="cap">${cap}</span>`}<div class="meta">${esc(p.format)} · ${p.ts.toLocaleDateString("en", { day: "numeric", month: "short" })}</div></td>`;
+    const cells = COLS.map(([k]) => {
+      const v = p[k], isBest = v != null && v === best[k] && ps.length > 1;
+      const text = k === "er" ? pct(v) : fmt(v);
+      const mini = k === "reach" ? `<div class="mini"><i style="width:${(v || 0) / maxReach * 100}%"></i></div>` : "";
+      return `<td class="${isBest ? "best" : ""}">${text}${mini}</td>`;
+    }).join("");
+    return `<tr>${first}${cells}</tr>`;
   }).join("");
-  const more = $("more");
-  more.hidden = sorted.length <= 8;
-  more.textContent = state.showAll ? "Show fewer" : `Show all ${sorted.length} posts`;
+  $("more").hidden = sorted.length <= 10;
+  $("more").textContent = state.showAll ? "Show fewer" : `Show all ${sorted.length} posts`;
 }
 
 function renderAudience() {
@@ -445,7 +495,10 @@ $("range").addEventListener("click", e => {
   document.querySelectorAll("#range button").forEach(x => x.setAttribute("aria-pressed", x === b));
   render();
 });
-$("sorts").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.sort = b.dataset.s; render(); });
+$("thead").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.dir = state.sort === b.dataset.c ? -state.dir : -1; state.sort = b.dataset.c; render();
+});
 $("more").addEventListener("click", () => { state.showAll = !state.showAll; render(); });
 
 function apply([a, m, s, au]) {
@@ -454,7 +507,7 @@ function apply([a, m, s, au]) {
   showUpdated(); render();
 }
 loadAll().then(apply).catch(() => {
-  $("loading").innerHTML = `<div class="empty"><b>Couldn't load the data.</b>The collector may not have run yet. Check the Actions tab on GitHub.</div>`;
+  $("loading").innerHTML = `<div class="card empty"><b>Couldn't load the data.</b>The collector may not have run yet. Check the Actions tab on GitHub.</div>`;
   $("updated").textContent = "";
 });
 setInterval(() => loadAll().then(apply).catch(() => {}), 10 * 60 * 1000);
