@@ -3,86 +3,140 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Instagram Analytics</title>
+<title>Atlas House · Instagram analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Unbounded:wght@400;500;600;700&display=swap">
+<!-- Benzin: once the licence covers web embedding, put the files in /fonts and add an @font-face for "Benzin" (weights 400-800). It then replaces Unbounded automatically. -->
 <style>
+  /* Atlas House Brand Book 2.1: palette p.21, pairings p.22, type p.24-26, screens p.30 */
   :root {
-    --bg: #f6f6f4; --card: #ffffff; --ink: #1b1b1a; --muted: #6b6b66; --line: #e4e4df;
-    --c1: #c13584; --c2: #2f6fed; --c3: #1f9d6b; --warn-bg: #fff4d6; --warn-ink: #7a5b00;
+    --brown: #432818; --peach: #FFE4BD; --clay: #D7976B; --night: #17293A;
+    --sirius: #FFBF00; --umber: #7A5C48; --white: #FFFFFF;
+    --font-display: "Benzin", "Unbounded", system-ui, sans-serif; /* Unbounded is a stand-in until Benzin files are licensed for web */
+    --font-text: "Source Serif 4", Georgia, serif;
+    /* light: white ground, Brown text and links */
+    --bg: var(--white); --card: var(--peach); --ink: var(--brown); --muted: var(--umber);
+    --line: color-mix(in srgb, var(--clay) 55%, transparent);
+    --track: color-mix(in srgb, var(--brown) 14%, transparent);
+    --accent: var(--brown); --link: var(--brown); --rule: var(--clay);
+    --c1: var(--brown); --c2: var(--clay); --c3: var(--night); --alt: var(--night);
+    --btn-bg: var(--brown); --btn-ink: var(--peach);
+    --banner-bg: var(--brown); --banner-ink: var(--peach);
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #121211; --card: #1b1b1a; --ink: #eeeeea; --muted: #9a9a93; --line: #2d2d2a;
-            --c1: #e0609f; --c2: #6c9bff; --c3: #43c58f; --warn-bg: #3a2f10; --warn-ink: #f0d27a; }
+    /* dark: Night ground, Peach text, Sirius links (Sirius only on dark grounds) */
+    :root {
+      --bg: var(--night); --card: color-mix(in srgb, var(--peach) 7%, var(--night)); --ink: var(--peach);
+      --muted: color-mix(in srgb, var(--peach) 72%, var(--night));
+      --line: color-mix(in srgb, var(--peach) 16%, transparent);
+      --track: color-mix(in srgb, var(--peach) 16%, transparent);
+      --accent: var(--sirius); --link: var(--sirius); --rule: var(--sirius);
+      --c1: var(--peach); --c2: var(--clay); --c3: var(--sirius); --alt: var(--clay);
+      --btn-bg: var(--peach); --btn-ink: var(--night);
+      --banner-bg: var(--peach); --banner-ink: var(--night);
+    }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 56px; }
-  header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-  h1 { font-size: 22px; margin: 0; }
-  .sub { color: var(--muted); font-size: 13px; }
-  .range button { background: var(--card); color: var(--ink); border: 1px solid var(--line);
-                  padding: 6px 12px; cursor: pointer; font: inherit; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 18px/1.45 var(--font-text); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 16px 48px; }
+  .label, th, .range button, .card h2, .brandline { font-family: var(--font-display); font-weight: 500; font-size: 12px;
+    letter-spacing: .02em; text-transform: uppercase; }
+
+  header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px;
+           padding-bottom: 20px; border-bottom: 2px solid var(--rule); margin-bottom: 8px; }
+  .head-left { display: flex; align-items: center; gap: 16px; }
+  .logo img { height: 48px; width: auto; display: block; }
+  .logo-dark { display: none !important; }
+  @media (prefers-color-scheme: dark) { .logo-light { display: none !important; } .logo-dark { display: block !important; } }
+  .brandline { color: var(--muted); margin-bottom: 6px; }
+  h1 { font: 600 42px/1.05 var(--font-display); letter-spacing: -.01em; margin: 0; }
+  .sub { color: var(--muted); font-size: 14px; }
+  .sub b { color: var(--ink); }
+
+  .range { display: flex; }
+  .range button { background: transparent; color: var(--ink); border: 1px solid var(--ink); padding: 9px 16px; cursor: pointer; }
   .range button:first-child { border-radius: 8px 0 0 8px; }
   .range button:last-child { border-radius: 0 8px 8px 0; }
   .range button + button { border-left: 0; }
-  .range button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-  .banner { background: var(--warn-bg); color: var(--warn-ink); padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; display: none; }
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-  .kpi .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
-  .kpi .val { font-size: 28px; font-weight: 650; margin-top: 4px; font-variant-numeric: tabular-nums; }
-  .kpi .delta { font-size: 13px; color: var(--muted); }
-  .up { color: var(--c3); } .down { color: #d1493f; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; margin-bottom: 12px; }
-  h2 { font-size: 14px; margin: 0 0 10px; }
+  .range button.on { background: var(--btn-bg); color: var(--btn-ink); border-color: var(--btn-bg); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  h3.section { font: 500 24px/1.2 var(--font-display); margin: 36px 0 14px; }
+  .banner { background: var(--banner-bg); color: var(--banner-ink); padding: 12px 16px; border-radius: 8px; margin: 16px 0 0; display: none; font-size: 14px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+  .card h2 { margin: 0 0 14px; color: var(--ink); }
+  .card h2 .sub { text-transform: none; font-family: var(--font-text); font-size: 14px; letter-spacing: 0; }
+  .kpi .label { color: var(--muted); }
+  .kpi .val { font: 600 24px/1.2 var(--font-display); margin: 6px 0 4px; font-variant-numeric: lining-nums; }
+  .kpi .delta { font-size: 14px; color: var(--muted); }
+  .up { color: var(--accent); font-weight: 600; } .down { font-weight: 600; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; }
   .chart { position: relative; height: 240px; }
-  .heat { display: grid; grid-template-columns: 34px repeat(24, 1fr); gap: 2px; font-size: 10px; color: var(--muted); }
-  .heat div { aspect-ratio: 1.4; border-radius: 3px; display: flex; align-items: center; justify-content: center; }
-  .heat .lbl { aspect-ratio: auto; justify-content: flex-start; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-  th { color: var(--muted); font-weight: 500; font-size: 12px; }
-  td.cap { white-space: normal; min-width: 180px; }
-  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
-  .scroll { overflow-x: auto; }
-  a { color: var(--c2); }
-  .bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--line); margin: 6px 0; }
-  .seg { height: 100%; }
-  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+
+  .bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--track); margin: 8px 0; }
+  .seg { height: 100%; border-right: 2px solid var(--card); }
+  .seg:last-child { border-right: 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 14px; }
   .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
-  .splitrow { margin-bottom: 16px; }
-  .hbar { display: grid; grid-template-columns: 90px 1fr 44px; gap: 8px; align-items: center; font-size: 13px; margin: 5px 0; }
-  .hbar .track { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
+  .splitrow { margin-bottom: 18px; }
+  .hbar { display: grid; grid-template-columns: 100px 1fr 44px; gap: 8px; align-items: center; font-size: 14px; margin: 6px 0; }
+  .hbar .track { height: 10px; background: var(--track); border-radius: 5px; overflow: hidden; }
   .hbar .fill { height: 100%; background: var(--c1); }
-  .hbar .pc { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .note { color: var(--muted); font-size: 13px; }
+  .hbar .pc { text-align: right; color: var(--muted); font-variant-numeric: lining-nums tabular-nums; }
+  .note { color: var(--muted); font-size: 14px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: lining-nums tabular-nums; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); }
+  td.cap { white-space: normal; min-width: 200px; }
+  td.n, th.n { text-align: right; }
+  .scroll { overflow-x: auto; }
+  a { color: var(--link); text-underline-offset: 3px; }
   .err { padding: 40px 0; text-align: center; color: var(--muted); }
+
+  footer { margin-top: 48px; padding-top: 16px; border-top: 2px solid var(--rule); color: var(--muted); font-size: 14px; }
+  @media (max-width: 600px) { h1 { font-size: 32px; } .wrap { padding-top: 20px; } }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div>
-      <h1>Instagram Analytics</h1>
-      <div class="sub" id="updated">Loading…</div>
+    <div class="head-left">
+      <div class="logo">
+        <img class="logo-light" src="assets/compact.svg" alt="Atlas House" onerror="this.remove()">
+        <img class="logo-dark" src="assets/compact-night.svg" alt="Atlas House" onerror="this.remove()">
+      </div>
+      <div>
+        <div class="brandline">Atlas House</div>
+        <h1>Instagram analytics</h1>
+        <div class="sub" id="updated">Loading…</div>
+      </div>
     </div>
     <div class="range" id="range">
-      <button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button>
+      <button data-d="7">7 days</button><button data-d="30" class="on">30 days</button><button data-d="90">90 days</button>
     </div>
   </header>
   <div class="banner" id="stale"></div>
   <div id="app">
+    <h3 class="section">At a glance</h3>
     <div class="kpis" id="kpis"></div>
+    <h3 class="section">Growth and reach</h3>
     <div class="grid">
       <div class="card"><h2>Followers</h2><div class="chart"><canvas id="cFollowers"></canvas></div></div>
       <div class="card"><h2>Daily reach &amp; views</h2><div class="chart"><canvas id="cReach"></canvas></div></div>
       <div class="card"><h2>Average reach by format</h2><div class="chart"><canvas id="cFormat"></canvas></div></div>
     </div>
+    <h3 class="section" id="srcHead">Where reach comes from</h3>
     <div class="grid" id="sourceGrid">
       <div class="card"><h2>Followers vs non-followers</h2><div id="splitFollow"></div></div>
       <div class="card"><h2>Reach by content type</h2><div id="splitType"></div></div>
       <div class="card"><h2>Daily reach: followers vs non-followers</h2><div class="chart"><canvas id="cSource"></canvas></div></div>
     </div>
+    <h3 class="section" id="audHead">Who follows you</h3>
     <div class="grid" id="audGrid">
       <div class="card"><h2>Top countries <span class="sub" id="audDate"></span></h2><div id="audCountry"></div></div>
       <div class="card"><h2>Age of followers</h2><div id="audAge"></div></div>
@@ -93,11 +147,13 @@
       <h2>Best time to post <span class="sub">(average reach, your local time)</span></h2>
       <div class="heat" id="heat"></div>
     </div>
+    <h3 class="section">Top posts</h3>
     <div class="card">
-      <h2>Top posts in range</h2>
+      <h2>Ranked by reach, posts published in this range</h2>
       <div class="scroll"><table id="posts"></table></div>
     </div>
   </div>
+  <footer>Algerian literature in English. · atlashouse.net</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -106,6 +162,8 @@
 const STALE_HOURS = 6;
 let state = { days: 30, account: [], media: [], metrics: [], audience: [] };
 const charts = {};
+Chart.defaults.font.family = "'Source Serif 4', Georgia, serif";
+Chart.defaults.font.size = 12;
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const fmt = n => n == null || isNaN(n) ? "–" : Math.round(n).toLocaleString();
 const pct = n => n == null || isNaN(n) ? "–" : (n * 100).toFixed(1) + "%";
@@ -175,8 +233,8 @@ function render() {
 
   drawLine("cFollowers", acct.map(r => r.date), [{ label: "Followers", data: acct.map(r => r.followers), color: css("--c1") }]);
   drawLine("cReach", acct.map(r => r.date), [
-    { label: "Reach", data: acct.map(r => r.reach), color: css("--c2") },
-    { label: "Views", data: acct.map(r => r.views), color: css("--c3") }]);
+    { label: "Reach", data: acct.map(r => r.reach), color: css("--c1") },
+    { label: "Views", data: acct.map(r => r.views), color: css("--alt"), dash: [6, 4] }]);
 
   const byFmt = {};
   ps.forEach(p => { (byFmt[p.format] ||= []).push(p.reach || 0); });
@@ -201,7 +259,7 @@ function drawLine(id, labels, sets) {
   charts[id]?.destroy();
   charts[id] = new Chart(document.getElementById(id), { type: "line",
     data: { labels, datasets: sets.map(s => ({ label: s.label, data: s.data, borderColor: s.color,
-      backgroundColor: s.color, tension: .3, pointRadius: 0, borderWidth: 2 })) },
+      backgroundColor: s.color, tension: .3, pointRadius: 0, borderWidth: 2, borderDash: s.dash || [] })) },
     options: baseOpts() });
 }
 function drawBar(id, labels, data) {
@@ -260,8 +318,9 @@ function splitRow(label, parts, nDays) {
 function drawSources(acct) {
   const grid = document.getElementById("sourceGrid");
   const has = k => acct.some(r => r[k] != null);
-  if (!has("reach_followers") && !has("reach_reels")) { grid.style.display = "none"; return; }
-  grid.style.display = "";
+  const head = document.getElementById("srcHead");
+  if (!has("reach_followers") && !has("reach_reels")) { grid.style.display = "none"; head.style.display = "none"; return; }
+  grid.style.display = ""; head.style.display = "";
   const sumK = k => acct.reduce((a, r) => a + (+r[k] || 0), 0);
   const n = k => acct.filter(r => r[k] != null).length || 1;
   const c1 = css("--c1"), c2 = css("--c2"), c3 = css("--c3");
@@ -288,8 +347,9 @@ function hbars(el, items, label) {
 
 function drawAudience() {
   const grid = document.getElementById("audGrid"), rows = state.audience;
-  if (!rows.length) { grid.style.display = "none"; return; }
-  grid.style.display = "";
+  const head = document.getElementById("audHead");
+  if (!rows.length) { grid.style.display = "none"; head.style.display = "none"; return; }
+  grid.style.display = ""; head.style.display = "";
   const latest = rows.reduce((a, r) => r.date > a ? r.date : a, "");
   document.getElementById("audDate").textContent = `(as of ${latest})`;
   const get = b => rows.filter(r => r.date === latest && r.breakdown === b).map(r => ({ key: String(r.key), value: +r.value || 0 }));
@@ -308,7 +368,7 @@ function showUpdated() {
   el.textContent = `Last updated ${t.toLocaleString()}`;
   if (hrs > STALE_HOURS) {
     banner.style.display = "block";
-    banner.textContent = `Data is ${Math.round(hrs)} hours old. The collector may have stopped; check the GitHub Actions tab.`;
+    banner.textContent = `This data is ${Math.round(hrs)} hours old. The collector may have stopped, so check the Actions tab on GitHub.`;
   }
 }
 
@@ -331,6 +391,9 @@ loadAll()
     document.getElementById("app").innerHTML = `<div class="err">Couldn't load data files. Run the collector first.</div>`;
     document.getElementById("updated").textContent = "";
   });
+
+// recolour the charts if the viewer switches between light and dark
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (state.account.length) render(); });
 
 // refresh automatically while the page stays open
 setInterval(() => loadAll()

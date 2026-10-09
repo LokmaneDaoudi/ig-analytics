@@ -36,3 +36,8 @@ python -m http.server 8765   # open http://localhost:8765
   `collect.py`.
 - The collector can't be tested against the real API until you have a token. Only the dashboard and
   demo mode have been tested.
+
+## Brand (Atlas House Brand Book 2.1)
+- Colours, light/dark modes and the type scale follow pages 21-26 and 30 of the book. Sirius gold appears on dark grounds only.
+- **Logo:** put the compact mark in `assets/` as `compact.svg` (Brown on white) and `compact-night.svg` (Peach on Night). The header shows them automatically at 48 px. Never redraw the mark or the star.
+- **Benzin:** the page uses Unbounded as a stand-in. The brand book lists the Benzin web licence as an open decision, so do not add the font files to this public repo until it is confirmed. Then add an `@font-face` for "Benzin" and it replaces the stand-in.
