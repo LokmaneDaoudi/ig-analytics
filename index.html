@@ -42,9 +42,8 @@
   h1 { font: 600 22px/1.15 var(--font-display); margin: 2px 0 0; letter-spacing: -.01em; }
   .controls { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .updated { font-size: 14px; color: var(--muted); }
-  .range { display: grid; grid-template-columns: repeat(3, 1fr); border: 2px solid var(--peach); border-radius: 10px; overflow: hidden; }
+  .range { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--card); border-radius: 10px; overflow: hidden; }
   .range button { background: transparent; border: 0; white-space: nowrap; padding: 9px 16px; cursor: pointer; font-size: 15px; font-weight: 600; min-height: 44px; }
-  .range button + button { border-left: 2px solid var(--peach); }
   .range button[aria-pressed="true"] { background: var(--sirius); color: var(--night); }
   .banner { background: var(--sirius); color: var(--night); padding: 12px 16px; border-radius: 10px; margin: -8px 0 24px; font-size: 15px; font-weight: 600; }
 
