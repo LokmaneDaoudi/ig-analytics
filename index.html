@@ -88,7 +88,8 @@
       <div class="card"><h2>Age of followers</h2><div id="audAge"></div></div>
       <div class="card"><h2>Gender of followers</h2><div id="audGender"></div></div>
     </div>
-    <div class="card" style="margin-bottom:12px">
+    <!-- Hidden: remove display:none and restore the drawHeat(ps) call in render() to bring it back -->
+    <div class="card" style="margin-bottom:12px;display:none">
       <h2>Best time to post <span class="sub">(average reach, your local time)</span></h2>
       <div class="heat" id="heat"></div>
     </div>
@@ -183,7 +184,7 @@ function render() {
   drawBar("cFormat", labels.map(l => `${l} (${byFmt[l].length})`),
           labels.map(l => byFmt[l].reduce((a, b) => a + b, 0) / byFmt[l].length));
 
-  drawHeat(ps);
+  // drawHeat(ps);  // "Best time to post" is hidden
   drawTable(ps);
   drawSources(acct);
   drawAudience();
