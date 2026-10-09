@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       backfill_days:
-        description: "Fill account stats for the last N days (max 30). Leave empty for a normal run."
+        description: "Fill account stats for the last N days (e.g. 90). Leave empty for a normal run."
         required: false
         default: ""
 
