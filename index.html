@@ -9,16 +9,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Unbounded:wght@500;600;700&display=swap">
 <!-- Benzin: once the licence covers web embedding, add an @font-face for "Benzin" (files in /fonts); it replaces Unbounded via --font-display. -->
 <style>
-  /* Atlas House Brand Book 2.1, dark surface: Night ground, Peach text, Sirius links and data (Sirius is allowed on dark grounds only). */
+  /* Atlas House Brand Book 2.1 colours on a black ground (the book itself uses Night; black chosen by the client): Peach text, Sirius links and data (Sirius is allowed on dark grounds only). */
   :root {
     color-scheme: dark;
     --night: #17293A; --peach: #FFE4BD; --clay: #D7976B; --sirius: #FFBF00; --brown: #432818;
     --font-display: "Benzin", "Unbounded", system-ui, sans-serif;
     --font-text: "Source Serif 4", Georgia, serif;
-    --bg: var(--night);
-    --card: color-mix(in srgb, var(--peach) 6%, var(--night));
+    --bg: #000000;
+    --card: color-mix(in srgb, var(--peach) 7%, #000000);
     --ink: var(--peach);
-    --muted: color-mix(in srgb, var(--peach) 70%, var(--night));
+    --muted: color-mix(in srgb, var(--peach) 72%, #000000);
     --line: color-mix(in srgb, var(--peach) 16%, transparent);
     --track: color-mix(in srgb, var(--peach) 14%, transparent);
   }
