@@ -22,7 +22,10 @@ BASE = f"https://graph.instagram.com/{API_VERSION}"
 DATA = Path(__file__).parent / "data"
 
 ACCOUNT_FIELDS = ["date", "followers", "media_count", "reach", "views",
-                  "profile_views", "accounts_engaged", "reposts", "fetched_at"]
+                  "profile_views", "accounts_engaged", "reposts",
+                  "reach_followers", "reach_non_followers", "views_followers", "views_non_followers",
+                  "reach_reels", "reach_posts", "reach_stories", "fetched_at"]
+AUDIENCE_FIELDS = ["date", "breakdown", "key", "value"]
 MEDIA_FIELDS = ["id", "timestamp", "media_type", "media_product_type", "permalink", "caption"]
 METRIC_FIELDS = ["id", "fetched_at", "likes", "comments", "reach", "views",
                  "saves", "shares", "reposts", "total_interactions"]
@@ -92,6 +95,34 @@ def account_metric_for_day(token, metric, day):
     return data["data"][0]["total_value"]["value"]
 
 
+# (metric, candidate breakdown names, API value -> column)
+BREAKDOWNS = [
+    ("reach", ["follow_type"], {"FOLLOWER": "reach_followers", "NON_FOLLOWER": "reach_non_followers"}),
+    ("views", ["follow_type", "follower_type"], {"FOLLOWER": "views_followers", "NON_FOLLOWER": "views_non_followers"}),
+    ("reach", ["media_product_type"], {"REEL": "reach_reels", "FEED": "reach_posts", "POST": "reach_posts",
+                                       "CAROUSEL_CONTAINER": "reach_posts", "STORY": "reach_stories"}),
+]
+
+
+def day_window(day):
+    start = datetime(day.year, day.month, day.day, tzinfo=timezone.utc)
+    return int(start.timestamp()), int((start + timedelta(days=1)).timestamp())
+
+
+def breakdown_for_day(token, metric, names, day):
+    since, until = day_window(day)
+    last = None
+    for name in names:  # Meta's docs are inconsistent about some breakdown names, so try each
+        try:
+            d = api_get("me/insights", token, metric=metric, period="day", metric_type="total_value",
+                        breakdown=name, since=since, until=until)
+            res = d["data"][0]["total_value"].get("breakdowns", [{}])[0].get("results", [])
+            return {r["dimension_values"][0]: r.get("value", 0) for r in res}
+        except Exception as e:
+            last = e
+    raise last
+
+
 def follower_estimates(token, current):
     """Rebuild past daily follower totals from the API's daily net-change series (last 30 days)."""
     end = now_utc()
@@ -134,6 +165,24 @@ def collect_account(token, backfill=0):
             except Exception as e:  # one unsupported metric must not kill the run
                 print(f"  warn: account metric {m} for {key}: {e}", file=sys.stderr)
                 row.setdefault(m, "")
+        for metric, names, mapping in BREAKDOWNS:
+            cols = sorted(set(mapping.values()))
+            if not is_recent and row.get(cols[0]) not in (None, ""):
+                continue
+            try:
+                res = breakdown_for_day(token, metric, names, day)
+                if "FEED" in res:  # avoid double counting if both FEED and its subtypes come back
+                    res.pop("POST", None)
+                    res.pop("CAROUSEL_CONTAINER", None)
+                for c in cols:
+                    row[c] = 0
+                for k, v in res.items():
+                    if k in mapping:
+                        row[mapping[k]] += v
+            except Exception as e:
+                print(f"  warn: {metric} breakdown {names[0]} for {key}: {e}", file=sys.stderr)
+                for c in cols:
+                    row.setdefault(c, "")
         row["fetched_at"] = fetched
         existing[key] = row
     write_csv(DATA / "account_daily.csv", ACCOUNT_FIELDS, sorted(existing.values(), key=lambda r: r["date"]))
@@ -180,6 +229,29 @@ def collect_media(token):
     print(f"media: {len(posts)} posts, {new_rows} snapshots added")
 
 
+# ---------- audience demographics ----------
+
+def collect_audience(token):
+    path = DATA / "audience.csv"
+    rows = read_csv(path)
+    today = now_utc().date().isoformat()
+    if any(r["date"] == today for r in rows):
+        return  # one snapshot per day is plenty
+    new = []
+    for b in ("country", "age", "gender"):
+        try:
+            d = api_get("me/insights", token, metric="follower_demographics", period="lifetime",
+                        metric_type="total_value", breakdown=b, timeframe="this_month")
+            res = d["data"][0]["total_value"]["breakdowns"][0]["results"]
+            for r in sorted(res, key=lambda r: r.get("value", 0), reverse=True)[:15]:
+                new.append({"date": today, "breakdown": b, "key": r["dimension_values"][0], "value": r.get("value", 0)})
+        except Exception as e:
+            print(f"  warn: follower demographics ({b}): {e}", file=sys.stderr)
+    if new:
+        write_csv(path, AUDIENCE_FIELDS, rows + new)
+        print(f"audience: {len(new)} rows")
+
+
 # ---------- token refresh ----------
 
 def refresh_token(token):
@@ -202,7 +274,22 @@ def make_demo():
                      "reach": rnd.randint(2500, 9000), "views": rnd.randint(6000, 24000),
                      "profile_views": rnd.randint(80, 420), "accounts_engaged": rnd.randint(180, 900),
                      "fetched_at": iso(now_utc())})
+        a = acct[-1]
+        a["reach_followers"] = int(a["reach"] * rnd.uniform(0.25, 0.5))
+        a["reach_non_followers"] = a["reach"] - a["reach_followers"]
+        a["views_followers"] = int(a["views"] * rnd.uniform(0.25, 0.5))
+        a["views_non_followers"] = a["views"] - a["views_followers"]
+        a["reach_reels"] = int(a["reach"] * 0.6)
+        a["reach_posts"] = int(a["reach"] * 0.3)
+        a["reach_stories"] = a["reach"] - a["reach_reels"] - a["reach_posts"]
+        a["reposts"] = rnd.randint(0, 30)
     write_csv(DATA / "account_daily.csv", ACCOUNT_FIELDS, acct)
+    aud = []
+    for b, items in {"country": [("US", 31), ("GB", 18), ("DZ", 14), ("FR", 9), ("CA", 7)],
+                     "age": [("18-24", 28), ("25-34", 41), ("35-44", 19), ("45-54", 8)],
+                     "gender": [("F", 58), ("M", 40), ("U", 2)]}.items():
+        aud += [{"date": today.isoformat(), "breakdown": b, "key": k, "value": v} for k, v in items]
+    write_csv(DATA / "audience.csv", AUDIENCE_FIELDS, aud)
 
     kinds = [("REELS", "VIDEO", 2.4), ("FEED", "IMAGE", 1.0), ("FEED", "CAROUSEL_ALBUM", 1.5)]
     captions = ["Behind the scenes of today's shoot", "3 editing tricks nobody tells you",
@@ -249,6 +336,7 @@ def main():
         return
     collect_account(token, args.backfill)
     collect_media(token)
+    collect_audience(token)
 
 
 if __name__ == "__main__":

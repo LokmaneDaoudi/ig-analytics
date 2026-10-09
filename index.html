@@ -46,6 +46,16 @@
   td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
   .scroll { overflow-x: auto; }
   a { color: var(--c2); }
+  .bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--line); margin: 6px 0; }
+  .seg { height: 100%; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+  .splitrow { margin-bottom: 16px; }
+  .hbar { display: grid; grid-template-columns: 90px 1fr 44px; gap: 8px; align-items: center; font-size: 13px; margin: 5px 0; }
+  .hbar .track { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
+  .hbar .fill { height: 100%; background: var(--c1); }
+  .hbar .pc { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .note { color: var(--muted); font-size: 13px; }
   .err { padding: 40px 0; text-align: center; color: var(--muted); }
 </style>
 </head>
@@ -68,6 +78,16 @@
       <div class="card"><h2>Daily reach &amp; views</h2><div class="chart"><canvas id="cReach"></canvas></div></div>
       <div class="card"><h2>Average reach by format</h2><div class="chart"><canvas id="cFormat"></canvas></div></div>
     </div>
+    <div class="grid" id="sourceGrid">
+      <div class="card"><h2>Followers vs non-followers</h2><div id="splitFollow"></div></div>
+      <div class="card"><h2>Reach by content type</h2><div id="splitType"></div></div>
+      <div class="card"><h2>Daily reach: followers vs non-followers</h2><div class="chart"><canvas id="cSource"></canvas></div></div>
+    </div>
+    <div class="grid" id="audGrid">
+      <div class="card"><h2>Top countries <span class="sub" id="audDate"></span></h2><div id="audCountry"></div></div>
+      <div class="card"><h2>Age of followers</h2><div id="audAge"></div></div>
+      <div class="card"><h2>Gender of followers</h2><div id="audGender"></div></div>
+    </div>
     <div class="card" style="margin-bottom:12px">
       <h2>Best time to post <span class="sub">(average reach, your local time)</span></h2>
       <div class="heat" id="heat"></div>
@@ -83,7 +103,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
 const STALE_HOURS = 6;
-let state = { days: 30, account: [], media: [], metrics: [] };
+let state = { days: 30, account: [], media: [], metrics: [], audience: [] };
 const charts = {};
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const fmt = n => n == null || isNaN(n) ? "–" : Math.round(n).toLocaleString();
@@ -133,13 +153,23 @@ function render() {
   const avgER = ers.length ? ers.reduce((a, b) => a + b, 0) / ers.length : null;
 
   const kpi = (label, val, delta) => `<div class="card kpi"><div class="label">${label}</div><div class="val">${val}</div><div class="delta">${delta || "&nbsp;"}</div></div>`;
+  const daysWith = k => acct.filter(r => r[k] != null).length || 1;
+  const perDay = k => `avg ${fmt(sum(k) / daysWith(k))} / day`;
+  const avgPost = k => ps.length ? fmt(ps.reduce((a, p) => a + (+p[k] || 0), 0) / ps.length) : "–";
+  const counts = {};
+  ps.forEach(p => counts[p.format] = (counts[p.format] || 0) + 1);
+  const mix = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([f, n]) => `${n} ${f.toLowerCase()}${n > 1 ? "s" : ""}`).join(" · ");
+  const hasRep = acct.some(r => r.reposts != null);
   document.getElementById("kpis").innerHTML =
     kpi("Followers", fmt(last?.followers), growth == null ? "" :
         `<span class="${growth >= 0 ? "up" : "down"}">${growth >= 0 ? "+" : ""}${fmt(growth)}</span> in ${state.days}d`) +
-    kpi("Reach", fmt(sum("reach")), `last ${state.days} days`) +
-    kpi("Views", fmt(sum("views")), `last ${state.days} days`) +
-    kpi("Profile visits", fmt(sum("profile_views")), `last ${state.days} days`) +
-    kpi("Reposts", acct.some(r => r.reposts != null) ? fmt(sum("reposts")) : "–", `last ${state.days} days`) +
+    kpi("Posts published", fmt(ps.length), `${mix || "none yet"}<br>≈ ${(ps.length / state.days * 7).toFixed(1)} / week · excl. stories`) +
+    kpi("Reach", fmt(sum("reach")), `sum of daily reach<br>${perDay("reach")}`) +
+    kpi("Views", fmt(sum("views")), `${perDay("views")}`) +
+    kpi("Avg reach / post", avgPost("reach"), `avg views ${avgPost("views")}`) +
+    kpi("Profile visits", fmt(sum("profile_views")), `${perDay("profile_views")}`) +
+    kpi("Shares", fmt(ps.reduce((a, p) => a + (+p.shares || 0), 0)), `avg ${avgPost("shares")} / post`) +
+    kpi("Reposts", hasRep ? fmt(sum("reposts")) : "–", hasRep ? `${perDay("reposts")}` : "no data yet") +
     kpi("Avg engagement", pct(avgER), `${ps.length} posts · interactions ÷ reach`);
 
   drawLine("cFollowers", acct.map(r => r.date), [{ label: "Followers", data: acct.map(r => r.followers), color: css("--c1") }]);
@@ -155,6 +185,8 @@ function render() {
 
   drawHeat(ps);
   drawTable(ps);
+  drawSources(acct);
+  drawAudience();
 }
 
 function baseOpts() {
@@ -214,6 +246,58 @@ function drawTable(ps) {
   if (!top.length) t.insertRow().insertCell().textContent = "No posts in this range yet.";
 }
 
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function splitRow(label, parts, nDays) {
+  const total = parts.reduce((a, p) => a + p.v, 0);
+  if (!total) return "";
+  const bar = parts.map(p => `<div class="seg" style="width:${p.v / total * 100}%;background:${p.c}" title="${p.n}: ${fmt(p.v)}"></div>`).join("");
+  const legend = parts.map(p => `<span><i style="background:${p.c}"></i>${p.n} <b>${(p.v / total * 100).toFixed(0)}%</b> · ${fmt(p.v)}</span>`).join("");
+  return `<div class="splitrow"><div class="sub">${label}</div><div class="bar">${bar}</div><div class="legend">${legend}</div><div class="sub">avg ${fmt(total / nDays)} / day</div></div>`;
+}
+
+function drawSources(acct) {
+  const grid = document.getElementById("sourceGrid");
+  const has = k => acct.some(r => r[k] != null);
+  if (!has("reach_followers") && !has("reach_reels")) { grid.style.display = "none"; return; }
+  grid.style.display = "";
+  const sumK = k => acct.reduce((a, r) => a + (+r[k] || 0), 0);
+  const n = k => acct.filter(r => r[k] != null).length || 1;
+  const c1 = css("--c1"), c2 = css("--c2"), c3 = css("--c3");
+  document.getElementById("splitFollow").innerHTML =
+    (splitRow("Reach", [{ n: "Followers", v: sumK("reach_followers"), c: c1 }, { n: "Non-followers", v: sumK("reach_non_followers"), c: c2 }], n("reach_followers")) +
+     splitRow("Views", [{ n: "Followers", v: sumK("views_followers"), c: c1 }, { n: "Non-followers", v: sumK("views_non_followers"), c: c2 }], n("views_followers"))) || `<div class="note">No data yet.</div>`;
+  document.getElementById("splitType").innerHTML =
+    splitRow("Reach", [{ n: "Reels", v: sumK("reach_reels"), c: c1 }, { n: "Posts", v: sumK("reach_posts"), c: c2 }, { n: "Stories", v: sumK("reach_stories"), c: c3 }], n("reach_reels")) +
+    `<div class="note">Posts include images and carousels.</div>`;
+  charts.cSource?.destroy();
+  const o = baseOpts(); o.scales.x.stacked = true; o.scales.y.stacked = true;
+  charts.cSource = new Chart(document.getElementById("cSource"), { type: "bar", options: o,
+    data: { labels: acct.map(r => r.date), datasets: [
+      { label: "Followers", data: acct.map(r => r.reach_followers), backgroundColor: c1 },
+      { label: "Non-followers", data: acct.map(r => r.reach_non_followers), backgroundColor: c2 }] } });
+}
+
+function hbars(el, items, label) {
+  const total = items.reduce((a, i) => a + i.value, 0) || 1, max = Math.max(1, ...items.map(i => i.value));
+  document.getElementById(el).innerHTML = items.length ? items.map(i =>
+    `<div class="hbar"><span>${esc(label(i.key))}</span><div class="track"><div class="fill" style="width:${i.value / max * 100}%"></div></div><span class="pc">${(i.value / total * 100).toFixed(0)}%</span></div>`).join("")
+    : `<div class="note">No data yet.</div>`;
+}
+
+function drawAudience() {
+  const grid = document.getElementById("audGrid"), rows = state.audience;
+  if (!rows.length) { grid.style.display = "none"; return; }
+  grid.style.display = "";
+  const latest = rows.reduce((a, r) => r.date > a ? r.date : a, "");
+  document.getElementById("audDate").textContent = `(as of ${latest})`;
+  const get = b => rows.filter(r => r.date === latest && r.breakdown === b).map(r => ({ key: String(r.key), value: +r.value || 0 }));
+  let regions; try { regions = new Intl.DisplayNames(["en"], { type: "region" }); } catch { regions = null; }
+  hbars("audCountry", get("country").sort((a, b) => b.value - a.value).slice(0, 8), k => { try { return regions ? regions.of(k) : k; } catch { return k; } });
+  hbars("audAge", get("age").sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true })), k => k);
+  hbars("audGender", get("gender").sort((a, b) => b.value - a.value), k => ({ F: "Women", M: "Men", U: "Unknown" }[k] || k));
+}
+
 function showUpdated() {
   const times = state.account.map(r => r.fetched_at).filter(Boolean).sort();
   const el = document.getElementById("updated"), banner = document.getElementById("stale");
@@ -234,9 +318,12 @@ document.getElementById("range").addEventListener("click", e => {
   render();
 });
 
-Promise.all([load("account_daily.csv"), load("media.csv"), load("media_metrics.csv")])
-  .then(([a, m, s]) => {
-    state.account = a; state.media = m; state.metrics = s;
+const loadAll = () => Promise.all([load("account_daily.csv"), load("media.csv"), load("media_metrics.csv"),
+  load("audience.csv").then(r => r.filter(x => x.breakdown)).catch(() => [])]);
+
+loadAll()
+  .then(([a, m, s, au]) => {
+    state.account = a; state.media = m; state.metrics = s; state.audience = au;
     showUpdated(); render();
   })
   .catch(() => {
@@ -245,8 +332,8 @@ Promise.all([load("account_daily.csv"), load("media.csv"), load("media_metrics.c
   });
 
 // refresh automatically while the page stays open
-setInterval(() => Promise.all([load("account_daily.csv"), load("media.csv"), load("media_metrics.csv")])
-  .then(([a, m, s]) => { state.account = a; state.media = m; state.metrics = s; showUpdated(); render(); }), 10 * 60 * 1000);
+setInterval(() => loadAll()
+  .then(([a, m, s, au]) => { state.account = a; state.media = m; state.metrics = s; state.audience = au; showUpdated(); render(); }), 10 * 60 * 1000);
 </script>
 </body>
 </html>
