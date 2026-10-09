@@ -138,22 +138,6 @@
   .cmp .chgc { text-align: right; font-size: 16px; }
   .cmp-keys { margin: 0 0 6px; }
 
-  /* posting calendar */
-  .cal { overflow-x: auto; }
-  .cal-grid { display: grid; grid-template-columns: 30px minmax(300px, 1fr); gap: 6px 8px; max-width: calc(40px + var(--weeks, 14) * 46px); }
-  .cal-months, .cal-days { display: grid; grid-template-columns: repeat(var(--weeks), minmax(0, 1fr)); gap: 4px; }
-  .cal-months { font-size: 12px; color: var(--muted); height: 16px; }
-  .cal-months span { white-space: nowrap; overflow: visible; }
-  .cal-dows { display: grid; grid-template-rows: repeat(7, 1fr); gap: 4px; font-size: 12px; color: var(--muted); }
-  .cal-dows span { display: flex; align-items: center; }
-  .cal-days { grid-auto-flow: column; grid-template-rows: repeat(7, auto); }
-  .day { aspect-ratio: 1; border-radius: 4px; background: var(--track); min-width: 0; }
-  .day.off { background: transparent; }
-  .day.unk { background: transparent; border: 1px dashed var(--line); }
-  .cal-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 16px; font-size: 13px; color: var(--muted); }
-  .cal-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
-  .cal-stats b { font-weight: 600; }
-
   /* post tags */
   .mult { font-size: 12px; margin-top: 2px; color: var(--muted); }
   .mult.up { color: var(--sirius); font-weight: 600; } .mult.down { color: var(--clay); font-weight: 600; }
@@ -174,8 +158,6 @@
     .chart { height: 190px; }
     .rank { grid-template-columns: minmax(88px, 110px) 1fr 56px; gap: 10px; }
     .cols2 { grid-template-columns: minmax(0, 1fr); }
-    .cal-grid { grid-template-columns: 28px minmax(0, 1fr); gap: 6px; }
-    .cal-days, .cal-months { gap: 3px; }
     .cmp { grid-template-columns: minmax(0, 1fr) 64px; gap: 8px 12px; }
     .cmp .bars { grid-column: 1 / -1; grid-row: 2; }
     .cmp .chgc { grid-column: 2; grid-row: 1; }
@@ -215,16 +197,6 @@
       <h2 id="hChanged">What changed</h2>
       <p class="lead" id="changedLead"></p>
       <div class="card"><div id="compare"></div><p class="note" id="changedNote"></p></div>
-    </section>
-
-    <section aria-labelledby="hCal">
-      <h2 id="hCal">Posting calendar</h2>
-      <p class="lead" id="calLead"></p>
-      <div class="card">
-        <div class="cal"><div class="cal-grid" id="calGrid" role="img" aria-label="Calendar of the last 90 days showing which days you posted"></div></div>
-        <div class="cal-legend" id="calLegend"></div>
-        <p class="note" id="calNote"></p>
-      </div>
     </section>
 
     <section aria-labelledby="hMix">
@@ -349,7 +321,6 @@ function allPosts() {
 /* ---------- helpers ---------- */
 const DAY = 864e5;
 const median = a => { const v = a.filter(x => x != null && !isNaN(x)).sort((x, y) => x - y); if (!v.length) return null; const m = v.length >> 1; return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2; };
-const dayKey = d => d.toLocaleDateString("en-CA");
 const sumOf = (rows, k) => rows.reduce((a, r) => a + (+r[k] || 0), 0);
 const daysWith = (rows, k) => rows.filter(r => r[k] != null).length || 1;
 const avgDay = (rows, k) => sumOf(rows, k) / daysWith(rows, k);
@@ -403,7 +374,6 @@ function render() {
   const w = windows();
   renderTiles(w);
   renderChanged(w);
-  renderCalendar(w.all);
   renderGrowthMix(w.acct);
   renderFormats(w.ps, w.acct);
   renderTrack(w.acct);
@@ -590,48 +560,6 @@ function renderChanged({ acct, prevAcct, ps, prevPs }) {
       <div class="chgc">${c == null ? "–" : `<span class="chg ${cls}">${cls === "up" ? "▲ " : cls === "down" ? "▼ " : ""}${Math.abs(c * 100).toFixed(0)}%</span>`}</div></div>`; };
   el.innerHTML = `<div class="keys cmp-keys"><span class="key"><i class="a"></i>Previous ${d} days</span><span class="key"><i class="b"></i>Last ${d} days</span></div>` + rows.map(row).join("");
   note.textContent = "Recent posts are still gaining reach, so the latest period can look lower than it will end up.";
-}
-
-function renderCalendar(all) {
-  const grid = $("calGrid"), lead = $("calLead"), note = $("calNote"), legend = $("calLegend");
-  if (!all.length) { lead.textContent = "No posts tracked yet."; grid.innerHTML = ""; legend.innerHTML = ""; note.textContent = ""; return; }
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const winStart = new Date(today); winStart.setDate(winStart.getDate() - 89);
-  const gridStart = new Date(winStart); gridStart.setDate(gridStart.getDate() - ((gridStart.getDay() + 6) % 7));
-  const byDay = {};
-  all.forEach(p => { const o = (byDay[dayKey(p.ts)] ||= { n: 0, reach: 0 }); o.n++; o.reach += p.reach || 0; });
-  const earliest = new Date(Math.min(...all.map(p => p.ts.getTime()))); earliest.setHours(0, 0, 0, 0);
-  const covStart = earliest > winStart ? earliest : winStart;
-  const weeks = Math.floor(Math.round((today - gridStart) / DAY) / 7) + 1;
-  const max = Math.max(1, ...Object.values(byDay).map(o => o.reach));
-  const shade = t => `rgba(255,191,0,${(0.22 + 0.78 * t).toFixed(2)})`;
-  let months = "", cells = "", prevMonth = -1;
-  for (let w = 0; w < weeks; w++) {
-    const first = new Date(gridStart); first.setDate(first.getDate() + w * 7);
-    months += `<span>${first.getMonth() !== prevMonth && w < weeks - 1 ? first.toLocaleDateString("en", { month: "short" }) : ""}</span>`;
-    prevMonth = first.getMonth();
-  }
-  for (let w = 0; w < weeks; w++) for (let r = 0; r < 7; r++) {
-    const dt = new Date(gridStart); dt.setDate(dt.getDate() + w * 7 + r);
-    if (dt > today) { cells += `<i class="day off"></i>`; continue; }
-    const o = byDay[dayKey(dt)], label = dt.toLocaleDateString("en", { day: "numeric", month: "short" });
-    if (dt < covStart) cells += `<i class="day unk" title="${label}: not tracked"></i>`;
-    else if (o) cells += `<i class="day" style="background:${shade(Math.sqrt(o.reach / max))}" title="${label}: ${o.n} post${o.n > 1 ? "s" : ""}, ${fmt(o.reach)} reach"></i>`;
-    else cells += `<i class="day" title="${label}: no post"></i>`;
-  }
-  grid.style.setProperty("--weeks", weeks);
-  grid.innerHTML = `<span></span><div class="cal-months" style="--weeks:${weeks}">${months}</div>
-    <div class="cal-dows"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span></span></div>
-    <div class="cal-days" style="--weeks:${weeks}">${cells}</div>`;
-  let posted = 0, total = 0, gap = 0, longest = 0, lastPost = null;
-  for (let dt = new Date(covStart); dt <= today; dt.setDate(dt.getDate() + 1)) {
-    total++;
-    if (byDay[dayKey(dt)]) { posted++; gap = 0; lastPost = new Date(dt); } else { gap++; longest = Math.max(longest, gap); }
-  }
-  const ago = lastPost ? Math.round((today - lastPost) / DAY) : null;
-  lead.innerHTML = `You posted on <b>${posted}</b> of the last <b>${total}</b> days. Your longest gap was <b>${longest} day${longest === 1 ? "" : "s"}</b>${ago == null ? "." : `, and your last post was <b>${ago === 0 ? "today" : ago + " day" + (ago > 1 ? "s" : "") + " ago"}</b>.`}`;
-  legend.innerHTML = `<span>No post</span><i style="background:var(--track)"></i><span>Less reach</span>${[0.15, 0.4, 0.7, 1].map(t => `<i style="background:${shade(t)}"></i>`).join("")}<span>More reach</span>`;
-  note.textContent = earliest > winStart ? `Only your latest ${all.length} posts are tracked, so days before ${earliest.toLocaleDateString("en", { day: "numeric", month: "short" })} are left out.` : "";
 }
 
 function renderLifecycle(all) {
