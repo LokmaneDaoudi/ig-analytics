@@ -11,11 +11,12 @@
 <style>
   /* Atlas House Brand Book 2.1: palette p.21, pairings p.22, type p.24-26, screens p.30 */
   :root {
+    color-scheme: light;
     --brown: #432818; --peach: #FFE4BD; --clay: #D7976B; --night: #17293A;
     --sirius: #FFBF00; --umber: #7A5C48; --white: #FFFFFF;
     --font-display: "Benzin", "Unbounded", system-ui, sans-serif; /* Unbounded is a stand-in until Benzin files are licensed for web */
     --font-text: "Source Serif 4", Georgia, serif;
-    /* light: white ground, Brown text and links */
+    /* white ground, Peach panels, Brown text and links */
     --bg: var(--white); --card: var(--peach); --ink: var(--brown); --muted: var(--umber);
     --line: color-mix(in srgb, var(--clay) 55%, transparent);
     --track: color-mix(in srgb, var(--brown) 14%, transparent);
@@ -23,19 +24,6 @@
     --c1: var(--brown); --c2: var(--clay); --c3: var(--night); --alt: var(--night);
     --btn-bg: var(--brown); --btn-ink: var(--peach);
     --banner-bg: var(--brown); --banner-ink: var(--peach);
-  }
-  @media (prefers-color-scheme: dark) {
-    /* dark: Night ground, Peach text, Sirius links (Sirius only on dark grounds) */
-    :root {
-      --bg: var(--night); --card: color-mix(in srgb, var(--peach) 7%, var(--night)); --ink: var(--peach);
-      --muted: color-mix(in srgb, var(--peach) 72%, var(--night));
-      --line: color-mix(in srgb, var(--peach) 16%, transparent);
-      --track: color-mix(in srgb, var(--peach) 16%, transparent);
-      --accent: var(--sirius); --link: var(--sirius); --rule: var(--sirius);
-      --c1: var(--peach); --c2: var(--clay); --c3: var(--sirius); --alt: var(--clay);
-      --btn-bg: var(--peach); --btn-ink: var(--night);
-      --banner-bg: var(--peach); --banner-ink: var(--night);
-    }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 18px/1.45 var(--font-text); }
@@ -47,8 +35,6 @@
            padding-bottom: 20px; border-bottom: 2px solid var(--rule); margin-bottom: 8px; }
   .head-left { display: flex; align-items: center; gap: 16px; }
   .logo img { height: 48px; width: auto; display: block; }
-  .logo-dark { display: none !important; }
-  @media (prefers-color-scheme: dark) { .logo-light { display: none !important; } .logo-dark { display: block !important; } }
   .brandline { color: var(--muted); margin-bottom: 6px; }
   h1 { font: 600 42px/1.05 var(--font-display); letter-spacing: -.01em; margin: 0; }
   .sub { color: var(--muted); font-size: 14px; }
@@ -107,8 +93,7 @@
   <header>
     <div class="head-left">
       <div class="logo">
-        <img class="logo-light" src="assets/compact.svg" alt="Atlas House" onerror="this.remove()">
-        <img class="logo-dark" src="assets/compact-night.svg" alt="Atlas House" onerror="this.remove()">
+        <img src="assets/compact.svg" alt="Atlas House" onerror="this.remove()">
       </div>
       <div>
         <div class="brandline">Atlas House</div>
@@ -391,9 +376,6 @@ loadAll()
     document.getElementById("app").innerHTML = `<div class="err">Couldn't load data files. Run the collector first.</div>`;
     document.getElementById("updated").textContent = "";
   });
-
-// recolour the charts if the viewer switches between light and dark
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (state.account.length) render(); });
 
 // refresh automatically while the page stays open
 setInterval(() => loadAll()
