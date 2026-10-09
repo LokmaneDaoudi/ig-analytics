@@ -24,7 +24,8 @@ DATA = Path(__file__).parent / "data"
 ACCOUNT_FIELDS = ["date", "followers", "media_count", "reach", "views",
                   "profile_views", "accounts_engaged", "reposts",
                   "reach_followers", "reach_non_followers", "views_followers", "views_non_followers",
-                  "reach_reels", "reach_posts", "reach_stories", "fetched_at"]
+                  "reach_reels", "reach_posts", "reach_stories",
+                  "follower_count", "fu_total", "fu_follower", "fu_non_follower", "fu_unknown", "fetched_at"]
 AUDIENCE_FIELDS = ["date", "breakdown", "key", "value"]
 MEDIA_FIELDS = ["id", "timestamp", "media_type", "media_product_type", "permalink", "caption"]
 METRIC_FIELDS = ["id", "fetched_at", "likes", "comments", "reach", "views",
@@ -132,13 +133,32 @@ def follower_estimates(token, current):
         values = d["data"][0]["values"]
     except Exception as e:
         print(f"  warn: follower_count history unavailable: {e}", file=sys.stderr)
-        return {}
-    est, running = {}, current
+        return {}, {}
+    est, raw, running = {}, {}, current
     for v in sorted(values, key=lambda v: v["end_time"], reverse=True):
         day = (parse_ts(v["end_time"]) - timedelta(days=1)).date().isoformat()  # end_time is the day's close
         est[day] = running
+        raw[day] = v.get("value", 0)
         running -= v.get("value", 0)
-    return est
+    return est, raw
+
+
+def follows_for_day(token, day):
+    """Raw follows-and-unfollows numbers. Meta does not document how the follow_type split maps to
+    follows versus unfollows, so store the raw values and let the data show what they mean."""
+    since, until = day_window(day)
+    out = {}
+    d = api_get("me/insights", token, metric="follows_and_unfollows", period="day",
+                metric_type="total_value", since=since, until=until)
+    out["fu_total"] = d["data"][0]["total_value"].get("value", "")
+    try:
+        res = breakdown_for_day(token, "follows_and_unfollows", ["follow_type"], day)
+        out["fu_follower"] = res.get("FOLLOWER", 0)
+        out["fu_non_follower"] = res.get("NON_FOLLOWER", 0)
+        out["fu_unknown"] = res.get("UNKNOWN", 0)
+    except Exception as e:
+        print(f"  warn: follows_and_unfollows breakdown for {day}: {e}", file=sys.stderr)
+    return out
 
 
 def collect_account(token, backfill=0):
@@ -147,7 +167,7 @@ def collect_account(token, backfill=0):
     fetched = iso(now_utc())
     today = now_utc().date()
     days = [today - timedelta(days=i) for i in range(max(backfill, 2) - 1, -1, -1)]
-    est = follower_estimates(token, me.get("followers_count", 0)) if backfill > 2 else {}
+    est, raw = follower_estimates(token, me.get("followers_count", 0)) if backfill > 2 else ({}, {})
     for day in days:
         key = day.isoformat()
         is_recent = day >= today - timedelta(days=1)
@@ -157,6 +177,16 @@ def collect_account(token, backfill=0):
             row["media_count"] = me.get("media_count", row.get("media_count", ""))
         elif not row.get("followers") and key in est:
             row["followers"] = est[key]
+        if key in raw:
+            row["follower_count"] = raw[key]
+        if is_recent or row.get("fu_total") in (None, ""):
+            try:
+                fu = follows_for_day(token, day)
+                row.update(fu)
+                if day == today:
+                    print(f"  follows_and_unfollows sample for {key}: {fu}")
+            except Exception as e:
+                print(f"  warn: follows_and_unfollows for {key}: {e}", file=sys.stderr)
         for m in ACCOUNT_METRICS:
             if not is_recent and row.get(m) not in (None, ""):
                 continue  # backfill only fills gaps
@@ -305,12 +335,13 @@ def make_demo():
         media.append({"id": pid, "timestamp": ts.strftime("%Y-%m-%dT%H:%M:%S+0000"),
                       "media_type": mtype, "media_product_type": prod,
                       "permalink": "https://www.instagram.com/", "caption": rnd.choice(captions)})
-        for step, frac in enumerate((0.4, 1.0)):
-            r = int(reach * frac)
-            metrics.append({"id": pid, "fetched_at": iso(now_utc() - timedelta(hours=(1 - step) * 6)),
+        age_now = (now_utc() - ts).total_seconds() / 86400
+        for age in [g for g in (0.25, 0.5, 1, 2, 3, 5, 7, 10, 14) if g < age_now] + [age_now]:
+            r = int(reach * (1 - 2.718 ** (-age / 1.6)))
+            metrics.append({"id": pid, "fetched_at": iso(ts + timedelta(days=age)),
                             "likes": int(r * 0.06), "comments": int(r * 0.004), "reach": r,
                             "views": int(r * 1.6), "saves": int(r * 0.012), "shares": int(r * 0.01),
-                            "total_interactions": int(r * 0.09)})
+                            "reposts": int(r * 0.004), "total_interactions": int(r * 0.09)})
     write_csv(DATA / "media.csv", MEDIA_FIELDS, sorted(media, key=lambda r: r["timestamp"]))
     write_csv(DATA / "media_metrics.csv", METRIC_FIELDS, metrics)
     print("demo data written to ./data")

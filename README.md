@@ -41,3 +41,6 @@ python -m http.server 8765   # open http://localhost:8765
 - Colours and the type scale follow pages 21-26 of the book. The dashboard is a single dark surface: black ground, Peach text, Sirius gold for data and links (the book specifies Night for dark grounds; black was chosen instead).
 - **Logo:** the header uses the compact mark, reverse version at the Regular weight (book p.18, Peach on Night): `assets/compact-reverse.svg`. Never redraw the mark or the star.
 - **Benzin:** the page uses Unbounded as a stand-in. The brand book lists the Benzin web licence as an open decision, so do not add the font files to this public repo until it is confirmed. Then add an `@font-face` for "Benzin" and it replaces the stand-in.
+
+## Follows and unfollows (raw columns)
+`data/account_daily.csv` now carries `follower_count`, `fu_total`, `fu_follower`, `fu_non_follower` and `fu_unknown`. These are Instagram's raw follows-and-unfollows numbers. Meta's docs do not say how the follow_type split maps to follows versus unfollows, so the dashboard shows net followers per day (certain) and the gained/lost labels wait until the real values have been checked.

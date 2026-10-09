@@ -121,6 +121,43 @@
   td .mini i { display: block; height: 100%; background: var(--sirius); }
   .more { margin-top: 12px; background: transparent; border: 2px solid var(--peach); border-radius: 999px; padding: 8px 18px; font-weight: 600; cursor: pointer; min-height: 44px; }
 
+  .cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; }
+  .note { font-size: 14px; color: var(--muted); margin: 14px 0 0; max-width: 75ch; }
+
+  /* what changed */
+  .cmp { display: grid; grid-template-columns: minmax(120px, 180px) minmax(0, 1fr) 76px; gap: 16px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); }
+  .cmp:first-of-type { border-top: 0; }
+  .cmp .n { font-weight: 600; line-height: 1.25; }
+  .cmp .n small { display: block; font-weight: 400; font-size: 13px; color: var(--muted); }
+  .cmp .bars { display: grid; gap: 6px; grid-template-columns: minmax(0, 1fr); min-width: 0; }
+  .cmp .line { display: flex; align-items: center; gap: 10px; }
+  .cmp .bw { flex: 1; min-width: 0; }
+  .cmp .b { height: 12px; border-radius: 6px; min-width: 4px; }
+  .cmp .b.prev { background: var(--clay); } .cmp .b.cur { background: var(--sirius); }
+  .cmp .num { width: 56px; text-align: right; font-size: 15px; font-variant-numeric: lining-nums tabular-nums; }
+  .cmp .chgc { text-align: right; font-size: 16px; }
+  .cmp-keys { margin: 0 0 6px; }
+
+  /* posting calendar */
+  .cal { overflow-x: auto; }
+  .cal-grid { display: grid; grid-template-columns: 30px minmax(300px, 1fr); gap: 6px 8px; max-width: calc(40px + var(--weeks, 14) * 46px); }
+  .cal-months, .cal-days { display: grid; grid-template-columns: repeat(var(--weeks), minmax(0, 1fr)); gap: 4px; }
+  .cal-months { font-size: 12px; color: var(--muted); height: 16px; }
+  .cal-months span { white-space: nowrap; overflow: visible; }
+  .cal-dows { display: grid; grid-template-rows: repeat(7, 1fr); gap: 4px; font-size: 12px; color: var(--muted); }
+  .cal-dows span { display: flex; align-items: center; }
+  .cal-days { grid-auto-flow: column; grid-template-rows: repeat(7, auto); }
+  .day { aspect-ratio: 1; border-radius: 4px; background: var(--track); min-width: 0; }
+  .day.off { background: transparent; }
+  .day.unk { background: transparent; border: 1px dashed var(--line); }
+  .cal-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 16px; font-size: 13px; color: var(--muted); }
+  .cal-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
+  .cal-stats b { font-weight: 600; }
+
+  /* post tags */
+  .mult { font-size: 12px; margin-top: 2px; color: var(--muted); }
+  .mult.up { color: var(--sirius); font-weight: 600; } .mult.down { color: var(--clay); font-weight: 600; }
+
   .skeleton { height: 14px; border-radius: 7px; background: var(--track); margin: 12px 0; }
   @media (prefers-reduced-motion: no-preference) { .skeleton { animation: pulse 1.4s ease-in-out infinite; } }
   @keyframes pulse { 50% { opacity: .45; } }
@@ -136,6 +173,12 @@
     .updated { text-align: left; }
     .chart { height: 190px; }
     .rank { grid-template-columns: minmax(88px, 110px) 1fr 56px; gap: 10px; }
+    .cols2 { grid-template-columns: minmax(0, 1fr); }
+    .cal-grid { grid-template-columns: 28px minmax(0, 1fr); gap: 6px; }
+    .cal-days, .cal-months { gap: 3px; }
+    .cmp { grid-template-columns: minmax(0, 1fr) 64px; gap: 8px 12px; }
+    .cmp .bars { grid-column: 1 / -1; grid-row: 2; }
+    .cmp .chgc { grid-column: 2; grid-row: 1; }
     th:first-child, td:first-child { min-width: 190px; max-width: 190px; }
     table { min-width: 800px; }
   }
@@ -166,6 +209,22 @@
       <h2 id="hGlance">At a glance</h2>
       <p class="lead" id="glanceLead"></p>
       <div class="tiles" id="tiles"></div>
+    </section>
+
+    <section aria-labelledby="hChanged">
+      <h2 id="hChanged">What changed</h2>
+      <p class="lead" id="changedLead"></p>
+      <div class="card"><div id="compare"></div><p class="note" id="changedNote"></p></div>
+    </section>
+
+    <section aria-labelledby="hCal">
+      <h2 id="hCal">Posting calendar</h2>
+      <p class="lead" id="calLead"></p>
+      <div class="card">
+        <div class="cal"><div class="cal-grid" id="calGrid" role="img" aria-label="Calendar of the last 90 days showing which days you posted"></div></div>
+        <div class="cal-legend" id="calLegend"></div>
+        <p class="note" id="calNote"></p>
+      </div>
     </section>
 
     <section aria-labelledby="hMix">
@@ -199,10 +258,21 @@
     <section aria-labelledby="hGrowth">
       <h2 id="hGrowth">Growth over time</h2>
       <p class="lead" id="trackLead"></p>
-      <div class="card cols3">
+      <div class="card cols2">
         <figure><div class="chart-h"><span>Followers</span><span class="v" id="mFollowers"></span></div><div class="chart"><canvas id="cFollowers" role="img" aria-label="Followers over time"></canvas></div></figure>
+        <figure><div class="chart-h"><span>Net followers each day</span><span class="v" id="mNet"></span></div><div class="chart"><canvas id="cNet" role="img" aria-label="Net change in followers each day"></canvas></div></figure>
         <figure><div class="chart-h"><span>Reach each day</span><span class="v" id="mReach"></span></div><div class="chart"><canvas id="cReach" role="img" aria-label="Reach each day"></canvas></div></figure>
         <figure><div class="chart-h"><span>Views each day</span><span class="v" id="mViews"></span></div><div class="chart"><canvas id="cViews" role="img" aria-label="Views each day"></canvas></div></figure>
+      </div>
+      <p class="note" id="netNote"></p>
+    </section>
+
+    <section aria-labelledby="hLife">
+      <h2 id="hLife">How fast posts gain reach</h2>
+      <p class="lead" id="lifeLead"></p>
+      <div class="card">
+        <div class="empty" id="lifeEmpty" hidden><b>Collecting data.</b>The collector re-checks every new post every two hours. After you've published a few posts, this shows how quickly a post gains reach, so you know when to judge it.</div>
+        <figure id="lifeFig"><div class="chart-h"><span>Share of a post's current reach, by time since publishing</span><span class="v" id="mLife"></span></div><div class="chart"><canvas id="cLife" role="img" aria-label="Typical share of a post's reach reached over time since publishing"></canvas></div></figure>
       </div>
     </section>
 
@@ -278,6 +348,8 @@ function allPosts() {
 
 /* ---------- helpers ---------- */
 const DAY = 864e5;
+const median = a => { const v = a.filter(x => x != null && !isNaN(x)).sort((x, y) => x - y); if (!v.length) return null; const m = v.length >> 1; return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2; };
+const dayKey = d => d.toLocaleDateString("en-CA");
 const sumOf = (rows, k) => rows.reduce((a, r) => a + (+r[k] || 0), 0);
 const daysWith = (rows, k) => rows.filter(r => r[k] != null).length || 1;
 const avgDay = (rows, k) => sumOf(rows, k) / daysWith(rows, k);
@@ -293,7 +365,7 @@ function windows() {
   const ps = all.filter(p => p.ts.getTime() >= now - d * DAY);
   const earliest = all.length ? Math.min(...all.map(p => p.ts.getTime())) : Infinity;
   const prevPs = earliest <= now - 2 * d * DAY ? all.filter(p => p.ts.getTime() >= now - 2 * d * DAY && p.ts.getTime() < now - d * DAY) : null;
-  return { acct, prevAcct, ps, prevPs };
+  return { acct, prevAcct, ps, prevPs, all };
 }
 
 function change(cur, prev, label) {
@@ -330,9 +402,12 @@ const bars = (id, labels, data) => draw(id, { type: "bar", options: chartOpts(fa
 function render() {
   const w = windows();
   renderTiles(w);
+  renderChanged(w);
+  renderCalendar(w.all);
   renderGrowthMix(w.acct);
   renderFormats(w.ps, w.acct);
   renderTrack(w.acct);
+  renderLifecycle(w.all);
   renderPosts(w.ps);
   renderAudience();
 }
@@ -433,6 +508,18 @@ function renderTrack(acct) {
   line("cFollowers", f.map(r => r.date), f.map(r => r.followers));
   bars("cReach", labels, acct.map(r => r.reach));
   bars("cViews", labels, acct.map(r => r.views));
+  const net = [];
+  for (let i = 1; i < acct.length; i++) {
+    const a = acct[i - 1], b = acct[i];
+    const ok = a.followers != null && b.followers != null && Math.round((dateOf(b) - dateOf(a)) / DAY) === 1;
+    net.push({ date: b.date, v: ok ? b.followers - a.followers : null });
+  }
+  const netVals = net.filter(x => x.v != null);
+  draw("cNet", { type: "bar", options: chartOpts(false), data: { labels: net.map(x => x.date), datasets: [
+    { data: net.map(x => x.v), backgroundColor: net.map(x => (x.v ?? 0) >= 0 ? SIRIUS : CLAY), borderRadius: 2 }] } });
+  const tot = netVals.reduce((a, x) => a + x.v, 0);
+  $("mNet").textContent = netVals.length ? `${tot >= 0 ? "+" : "−"}${fmt(Math.abs(tot))} in total` : "";
+  $("netNote").textContent = "Net change is followers gained minus followers lost. Days from before the collector started are estimated from Instagram's daily figures.";
   $("mFollowers").textContent = last ? fmt(last.followers) : "";
   $("mReach").textContent = `${fmt(avgDay(acct, "reach"))} a day`;
   $("mViews").textContent = `${fmt(avgDay(acct, "views"))} a day`;
@@ -445,7 +532,8 @@ function renderPosts(ps) {
   const shown = state.showAll ? sorted : sorted.slice(0, 10);
   const best = {}; COLS.forEach(([k]) => { best[k] = Math.max(...ps.map(p => p[k] ?? -Infinity)); });
   const maxReach = Math.max(1, best.reach);
-  $("postsLead").textContent = ps.length ? `Every metric for each post from the last ${state.days} days. Select a column heading to sort. The best value in each column is gold.` : "No posts in this range. Try 90 days.";
+  const usualAll = allPosts(), usual = median(usualAll.map(p => p.reach));
+  $("postsLead").textContent = ps.length ? `Every metric for each post from the last ${state.days} days. Select a column heading to sort. The best value in each column is gold. The tag under each reach is a multiple of your usual (the median of your last ${usualAll.length} posts: ${fmt(usual)}).` : "No posts in this range. Try 90 days.";
   $("posts").innerHTML = shown.map(p => {
     const link = /^https:\/\//.test(p.permalink || "");
     const cap = esc(p.caption || "No caption");
@@ -453,13 +541,128 @@ function renderPosts(ps) {
     const cells = COLS.map(([k]) => {
       const v = p[k], isBest = v != null && v === best[k] && ps.length > 1;
       const text = k === "er" ? pct(v) : fmt(v);
-      const mini = k === "reach" ? `<div class="mini"><i style="width:${(v || 0) / maxReach * 100}%"></i></div>` : "";
+      const mult = k === "reach" && usual && v != null ? (() => { const m = v / usual; return `<div class="mult ${m >= 1.5 ? "up" : m <= 0.67 ? "down" : ""}">${m.toFixed(1)}× usual</div>`; })() : "";
+      const mini = k === "reach" ? `${mult}<div class="mini"><i style="width:${(v || 0) / maxReach * 100}%"></i></div>` : "";
       return `<td class="${isBest ? "best" : ""}">${text}${mini}</td>`;
     }).join("");
     return `<tr>${first}${cells}</tr>`;
   }).join("");
   $("more").hidden = sorted.length <= 10;
   $("more").textContent = state.showAll ? "Show fewer" : `Show all ${sorted.length} posts`;
+}
+
+function renderChanged({ acct, prevAcct, ps, prevPs }) {
+  const d = state.days, el = $("compare"), lead = $("changedLead"), note = $("changedNote");
+  if (!prevAcct || !prevPs || !prevPs.length || !ps.length) {
+    lead.textContent = "";
+    note.textContent = "";
+    el.innerHTML = `<div class="empty"><b>Needs more history.</b>This compares the last ${d} days with the ${d} days before them. Try 7 or 30 days.</div>`;
+    return;
+  }
+  const avgReach = a => a.reduce((s, p) => s + (p.reach || 0), 0) / a.length;
+  const rows = [
+    { name: "Posts published", note: "no stories", prev: prevPs.length, cur: ps.length },
+    { name: "Reach per post", note: "average", prev: avgReach(prevPs), cur: avgReach(ps) },
+    { name: "Reach a day", note: "whole account", prev: avgDay(prevAcct, "reach"), cur: avgDay(acct, "reach") }
+  ];
+  const ch = r => r.prev ? (r.cur - r.prev) / r.prev : null;
+  const [dPosts, dRpp, dDay] = rows.map(ch);
+  const pcs = x => Math.round(Math.abs(x) * 100) + "%";
+  let text = "";
+  if (dDay != null) {
+    if (Math.abs(dDay) < 0.05) text = `Reach a day held steady (${dDay >= 0 ? "+" : "−"}${pcs(dDay)}).`;
+    else {
+      const dir = dDay > 0 ? "rose" : "fell", head = `Reach a day ${dir} <b>${pcs(dDay)}</b>.`;
+      const postsDrive = dPosts != null && Math.abs(dPosts) >= 0.2 && Math.sign(dPosts) === Math.sign(dDay);
+      const rppDrive = dRpp != null && Math.abs(dRpp) >= 0.2 && Math.sign(dRpp) === Math.sign(dDay);
+      const rppWord = dRpp > 0 ? "more" : "fewer", postsWord = dPosts > 0 ? "more" : "fewer";
+      if (postsDrive && rppDrive) text = `${head} You posted <b>${pcs(dPosts)} ${postsWord}</b> and each post reached <b>${pcs(dRpp)} ${rppWord}</b> people.`;
+      else if (postsDrive) text = `${head} Mostly because you posted <b>${pcs(dPosts)} ${dPosts > 0 ? "more" : "less"}</b>${dRpp != null && Math.abs(dRpp) >= 0.1 && Math.sign(dRpp) !== Math.sign(dDay) ? `, even though each post reached ${pcs(dRpp)} ${rppWord} people` : ""}.`;
+      else if (rppDrive) text = `${head} Mostly because each post reached <b>${pcs(dRpp)} ${rppWord}</b> people.`;
+      else text = `${head} Neither how often you posted nor reach per post moved much, so look at which posts did well in the table below.`;
+    }
+  }
+  lead.innerHTML = text;
+  const row = r => { const c = ch(r), max = Math.max(r.prev, r.cur, 1), cls = c == null ? "flat" : c > 0.005 ? "up" : c < -0.005 ? "down" : "flat";
+    return `<div class="cmp"><div class="n">${r.name}<small>${r.note}</small></div>
+      <div class="bars"><div class="line"><div class="bw"><div class="b prev" style="width:${r.prev / max * 100}%"></div></div><span class="num">${fmt(r.prev)}</span></div>
+      <div class="line"><div class="bw"><div class="b cur" style="width:${r.cur / max * 100}%"></div></div><span class="num">${fmt(r.cur)}</span></div></div>
+      <div class="chgc">${c == null ? "–" : `<span class="chg ${cls}">${cls === "up" ? "▲ " : cls === "down" ? "▼ " : ""}${Math.abs(c * 100).toFixed(0)}%</span>`}</div></div>`; };
+  el.innerHTML = `<div class="keys cmp-keys"><span class="key"><i class="a"></i>Previous ${d} days</span><span class="key"><i class="b"></i>Last ${d} days</span></div>` + rows.map(row).join("");
+  note.textContent = "Recent posts are still gaining reach, so the latest period can look lower than it will end up.";
+}
+
+function renderCalendar(all) {
+  const grid = $("calGrid"), lead = $("calLead"), note = $("calNote"), legend = $("calLegend");
+  if (!all.length) { lead.textContent = "No posts tracked yet."; grid.innerHTML = ""; legend.innerHTML = ""; note.textContent = ""; return; }
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const winStart = new Date(today); winStart.setDate(winStart.getDate() - 89);
+  const gridStart = new Date(winStart); gridStart.setDate(gridStart.getDate() - ((gridStart.getDay() + 6) % 7));
+  const byDay = {};
+  all.forEach(p => { const o = (byDay[dayKey(p.ts)] ||= { n: 0, reach: 0 }); o.n++; o.reach += p.reach || 0; });
+  const earliest = new Date(Math.min(...all.map(p => p.ts.getTime()))); earliest.setHours(0, 0, 0, 0);
+  const covStart = earliest > winStart ? earliest : winStart;
+  const weeks = Math.floor(Math.round((today - gridStart) / DAY) / 7) + 1;
+  const max = Math.max(1, ...Object.values(byDay).map(o => o.reach));
+  const shade = t => `rgba(255,191,0,${(0.22 + 0.78 * t).toFixed(2)})`;
+  let months = "", cells = "", prevMonth = -1;
+  for (let w = 0; w < weeks; w++) {
+    const first = new Date(gridStart); first.setDate(first.getDate() + w * 7);
+    months += `<span>${first.getMonth() !== prevMonth && w < weeks - 1 ? first.toLocaleDateString("en", { month: "short" }) : ""}</span>`;
+    prevMonth = first.getMonth();
+  }
+  for (let w = 0; w < weeks; w++) for (let r = 0; r < 7; r++) {
+    const dt = new Date(gridStart); dt.setDate(dt.getDate() + w * 7 + r);
+    if (dt > today) { cells += `<i class="day off"></i>`; continue; }
+    const o = byDay[dayKey(dt)], label = dt.toLocaleDateString("en", { day: "numeric", month: "short" });
+    if (dt < covStart) cells += `<i class="day unk" title="${label}: not tracked"></i>`;
+    else if (o) cells += `<i class="day" style="background:${shade(Math.sqrt(o.reach / max))}" title="${label}: ${o.n} post${o.n > 1 ? "s" : ""}, ${fmt(o.reach)} reach"></i>`;
+    else cells += `<i class="day" title="${label}: no post"></i>`;
+  }
+  grid.style.setProperty("--weeks", weeks);
+  grid.innerHTML = `<span></span><div class="cal-months" style="--weeks:${weeks}">${months}</div>
+    <div class="cal-dows"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span></span></div>
+    <div class="cal-days" style="--weeks:${weeks}">${cells}</div>`;
+  let posted = 0, total = 0, gap = 0, longest = 0, lastPost = null;
+  for (let dt = new Date(covStart); dt <= today; dt.setDate(dt.getDate() + 1)) {
+    total++;
+    if (byDay[dayKey(dt)]) { posted++; gap = 0; lastPost = new Date(dt); } else { gap++; longest = Math.max(longest, gap); }
+  }
+  const ago = lastPost ? Math.round((today - lastPost) / DAY) : null;
+  lead.innerHTML = `You posted on <b>${posted}</b> of the last <b>${total}</b> days. Your longest gap was <b>${longest} day${longest === 1 ? "" : "s"}</b>${ago == null ? "." : `, and your last post was <b>${ago === 0 ? "today" : ago + " day" + (ago > 1 ? "s" : "") + " ago"}</b>.`}`;
+  legend.innerHTML = `<span>No post</span><i style="background:var(--track)"></i><span>Less reach</span>${[0.15, 0.4, 0.7, 1].map(t => `<i style="background:${shade(t)}"></i>`).join("")}<span>More reach</span>`;
+  note.textContent = earliest > winStart ? `Only your latest ${all.length} posts are tracked, so days before ${earliest.toLocaleDateString("en", { day: "numeric", month: "short" })} are left out.` : "";
+}
+
+function renderLifecycle(all) {
+  const GRID = [0.25, 0.5, 1, 2, 3, 5, 7, 10, 14];
+  const label = g => g < 1 ? `${g * 24} hours` : `${g} day${g === 1 ? "" : "s"}`;
+  const snaps = {};
+  state.metrics.forEach(r => { if (r.reach != null) (snaps[r.id] ||= []).push(r); });
+  const series = all.filter(p => snaps[p.id]).map(p => {
+    const pts = snaps[p.id].map(r => ({ age: (new Date(r.fetched_at) - p.ts) / DAY, reach: +r.reach })).filter(x => x.age >= 0).sort((a, b) => a.age - b.age);
+    return pts.length >= 3 && pts[pts.length - 1].reach > 0 ? { pts, final: pts[pts.length - 1] } : null;
+  }).filter(Boolean);
+  const med = GRID.map(g => {
+    const vals = series.filter(s => s.pts[0].age <= g && s.final.age >= g).map(s => {
+      let v = null; for (const q of s.pts) { if (q.age <= g) v = q.reach; else break; } return v / s.final.reach; });
+    return { g, n: vals.length, m: vals.length >= 2 ? median(vals) : null };
+  }).filter(x => x.m != null);
+  const empty = med.length < 3;
+  $("lifeEmpty").hidden = !empty; $("lifeFig").hidden = empty;
+  if (empty) { $("lifeLead").textContent = ""; return; }
+  const half = med.find(x => x.m >= 0.5), eighty = med.find(x => x.m >= 0.8);
+  const parts = [];
+  if (half) parts.push(`half of a post's reach has arrived <b>${label(half.g)}</b> after publishing`);
+  if (eighty) parts.push(`80% by <b>${label(eighty.g)}</b>`);
+  $("lifeLead").innerHTML = parts.length ? `Typically ${parts.join(", and ")}. Judge a post after that.` : "Posts are still gaining reach at the oldest checkpoint we have.";
+  $("mLife").textContent = `${Math.max(...med.map(x => x.n))} posts`;
+  const o = chartOpts(false);
+  o.scales.x.ticks = { maxTicksLimit: 6, maxRotation: 0, callback(v) { return this.getLabelForValue(v); } };
+  o.scales.y.min = 0; o.scales.y.max = 100; o.scales.y.ticks = { stepSize: 25, callback: v => v + "%" };
+  o.plugins.tooltip.callbacks = { title: i => "After " + i[0].label, label: c => `${Math.round(c.parsed.y)}% of current reach (${med[c.dataIndex].n} posts)` };
+  draw("cLife", { type: "line", options: o, data: { labels: med.map(x => label(x.g)), datasets: [
+    { data: med.map(x => Math.round(x.m * 100)), borderColor: SIRIUS, backgroundColor: SIRIUS, borderWidth: 2.5, pointRadius: 4, tension: .25 }] } });
 }
 
 function renderAudience() {
