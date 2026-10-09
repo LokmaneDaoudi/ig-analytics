@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 */2 * * *"   # every 2 hours
   workflow_dispatch:
+    inputs:
+      backfill_days:
+        description: "Fill account stats for the last N days (max 30). Leave empty for a normal run."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -27,7 +32,8 @@ jobs:
       - name: Collect data
         env:
           IG_TOKEN: ${{ secrets.IG_TOKEN }}
-        run: python collect.py
+          BACKFILL_DAYS: ${{ inputs.backfill_days }}
+        run: python collect.py --backfill "${BACKFILL_DAYS:-0}"
 
       # Optional: refresh the 60-day token weekly. Needs a PAT with "secrets" write
       # access stored as the GH_PAT secret; skipped when GH_PAT is not set.

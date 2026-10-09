@@ -91,17 +91,43 @@ def account_metric_for_day(token, metric, day):
     return data["data"][0]["total_value"]["value"]
 
 
-def collect_account(token):
+def follower_estimates(token, current):
+    """Rebuild past daily follower totals from the API's daily net-change series (last 30 days)."""
+    end = now_utc()
+    try:
+        d = api_get("me/insights", token, metric="follower_count", period="day",
+                    since=int((end - timedelta(days=29)).timestamp()), until=int(end.timestamp()))
+        values = d["data"][0]["values"]
+    except Exception as e:
+        print(f"  warn: follower_count history unavailable: {e}", file=sys.stderr)
+        return {}
+    est, running = {}, current
+    for v in sorted(values, key=lambda v: v["end_time"], reverse=True):
+        day = (parse_ts(v["end_time"]) - timedelta(days=1)).date().isoformat()  # end_time is the day's close
+        est[day] = running
+        running -= v.get("value", 0)
+    return est
+
+
+def collect_account(token, backfill=0):
     me = api_get("me", token, fields="username,followers_count,media_count")
     existing = {r["date"]: r for r in read_csv(DATA / "account_daily.csv")}
     fetched = iso(now_utc())
     today = now_utc().date()
-    for day in (today - timedelta(days=1), today):
+    days = [today - timedelta(days=i) for i in range(max(backfill, 2) - 1, -1, -1)]
+    est = follower_estimates(token, me.get("followers_count", 0)) if backfill > 2 else {}
+    for day in days:
         key = day.isoformat()
+        is_recent = day >= today - timedelta(days=1)
         row = existing.get(key, {"date": key})
-        row["followers"] = me.get("followers_count", row.get("followers", ""))
-        row["media_count"] = me.get("media_count", row.get("media_count", ""))
+        if is_recent:
+            row["followers"] = me.get("followers_count", row.get("followers", ""))
+            row["media_count"] = me.get("media_count", row.get("media_count", ""))
+        elif not row.get("followers") and key in est:
+            row["followers"] = est[key]
         for m in ACCOUNT_METRICS:
+            if not is_recent and row.get(m) not in (None, ""):
+                continue  # backfill only fills gaps
             try:
                 row[m] = account_metric_for_day(token, m, day)
             except Exception as e:  # one unsupported metric must not kill the run
@@ -110,7 +136,7 @@ def collect_account(token):
         row["fetched_at"] = fetched
         existing[key] = row
     write_csv(DATA / "account_daily.csv", ACCOUNT_FIELDS, sorted(existing.values(), key=lambda r: r["date"]))
-    print(f"account: @{me.get('username')} followers={me.get('followers_count')}")
+    print(f"account: @{me.get('username')} followers={me.get('followers_count')} days={len(days)}")
 
 
 # ---------- media metrics ----------
@@ -208,6 +234,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--demo", action="store_true")
     ap.add_argument("--refresh-token", action="store_true")
+    ap.add_argument("--backfill", type=int, default=0, help="also fill account stats for the last N days")
     args = ap.parse_args()
 
     if args.demo:
@@ -219,7 +246,7 @@ def main():
     if args.refresh_token:
         print(refresh_token(token))
         return
-    collect_account(token)
+    collect_account(token, args.backfill)
     collect_media(token)
 
 
