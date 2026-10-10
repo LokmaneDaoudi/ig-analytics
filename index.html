@@ -63,7 +63,7 @@
   .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
   .tile { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 12px; display: flex; flex-direction: column; min-width: 0; }
   .tile .lab { font-size: 14px; font-weight: 600; color: var(--muted); }
-  .tile .val { font: 600 34px/1.1 var(--font-display); letter-spacing: -.02em; margin: 6px 0 4px; font-variant-numeric: lining-nums; white-space: nowrap; }
+  .tile .val { font: 600 34px/1.1 var(--font-display); letter-spacing: -.02em; margin: 6px 0 4px; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
   .tile .dl { font-size: 14px; color: var(--muted); min-height: 21px; }
   .chg { font-weight: 600; white-space: nowrap; }
   .chg.up { color: var(--sirius); } .chg.down { color: var(--clay); } .chg.flat { color: var(--ink); }
@@ -142,6 +142,43 @@
   .mult { font-size: 12px; margin-top: 2px; color: var(--muted); }
   .mult.up { color: var(--sirius); font-weight: 600; } .mult.down { color: var(--clay); font-weight: 600; }
 
+  /* motion: short, purposeful, and all of it switched off by prefers-reduced-motion */
+  :root { --out: cubic-bezier(0.16, 1, 0.3, 1); --std: cubic-bezier(0.2, 0, 0, 1); }
+  .range { position: relative; --i: 1; }
+  .range .thumb { position: absolute; top: 0; bottom: 0; left: 0; width: calc(100% / 3); background: var(--sirius); border-radius: 10px; transform: translateX(calc(var(--i) * 100%)); transition: transform 260ms var(--out); }
+  .range button { position: relative; z-index: 1; transition: color 160ms var(--std), transform 120ms var(--std); }
+  .range button[aria-pressed="true"] { background: transparent; color: var(--night); }
+  .range button:active, .chip:active, .more:active { transform: scale(0.98); }
+  .more { transition: transform 120ms var(--std), background-color 160ms var(--std); }
+  td { transition: background-color 120ms var(--std); }
+  #loaded:not([hidden]) { animation: fadeIn 280ms var(--out); }
+  .reveal { opacity: 0; transform: translateY(10px); transition: opacity 320ms var(--out), transform 460ms var(--out); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal:not(.in) .grow, .reveal:not(.in) .wipe, .reveal:not(.in) .rise { animation-play-state: paused; }
+  .grow { transform-origin: left center; animation: grow 700ms var(--out) backwards; animation-delay: calc(var(--k, 0) * 60ms); }
+  .cmp .b.cur.grow { animation-delay: 90ms; }
+  .wipe { animation: wipe 800ms var(--out) backwards; }
+  .tiles.enter .tile { animation: rise 460ms var(--out) backwards; }
+  .tiles.enter .tile:nth-child(2) { animation-delay: 40ms; } .tiles.enter .tile:nth-child(3) { animation-delay: 80ms; }
+  .tiles.enter .tile:nth-child(4) { animation-delay: 120ms; } .tiles.enter .tile:nth-child(5) { animation-delay: 160ms; }
+  .tiles.enter .tile:nth-child(6) { animation-delay: 200ms; } .tiles.enter .tile:nth-child(7) { animation-delay: 240ms; }
+  .tiles.enter .tile:nth-child(8) { animation-delay: 280ms; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  @media (hover: hover) and (pointer: fine) {
+    .tile { transition: transform 180ms var(--std), border-color 180ms var(--std); }
+    .tile:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--peach) 34%, transparent); }
+    tbody tr:hover td { background: color-mix(in srgb, var(--peach) 5%, var(--card)); }
+    .more:hover { background: color-mix(in srgb, var(--peach) 8%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
+    .reveal { opacity: 1; transform: none; }
+    .tile:hover { transform: none; }
+  }
+
   .skeleton { height: 14px; border-radius: 7px; background: var(--track); margin: 12px 0; }
   @media (prefers-reduced-motion: no-preference) { .skeleton { animation: pulse 1.4s ease-in-out infinite; } }
   @keyframes pulse { 50% { opacity: .45; } }
@@ -176,6 +213,7 @@
     <div class="controls">
       <span class="updated" id="updated">Loading…</span>
       <div class="range" id="range" role="group" aria-label="Time range">
+        <span class="thumb" aria-hidden="true"></span>
         <button data-d="7" aria-pressed="false">7 days</button>
         <button data-d="30" aria-pressed="true">30 days</button>
         <button data-d="90" aria-pressed="false">90 days</button>
@@ -187,19 +225,19 @@
   <div id="loading"><div class="skeleton" style="width:50%"></div><div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:70%"></div></div>
 
   <main id="loaded" hidden>
-    <section aria-labelledby="hGlance">
+    <section class="reveal" aria-labelledby="hGlance">
       <h2 id="hGlance">At a glance</h2>
       <p class="lead" id="glanceLead"></p>
       <div class="tiles" id="tiles"></div>
     </section>
 
-    <section aria-labelledby="hChanged">
+    <section class="reveal" aria-labelledby="hChanged">
       <h2 id="hChanged">What changed</h2>
       <p class="lead" id="changedLead"></p>
       <div class="card"><div id="compare"></div><p class="note" id="changedNote"></p></div>
     </section>
 
-    <section aria-labelledby="hMix">
+    <section class="reveal" aria-labelledby="hMix">
       <div class="row2">
         <div>
           <h2 id="hMix">Where your reach comes from</h2>
@@ -227,7 +265,7 @@
       </div>
     </section>
 
-    <section aria-labelledby="hGrowth">
+    <section class="reveal" aria-labelledby="hGrowth">
       <h2 id="hGrowth">Growth over time</h2>
       <p class="lead" id="trackLead"></p>
       <div class="card cols2">
@@ -239,7 +277,7 @@
       <p class="note" id="netNote"></p>
     </section>
 
-    <section aria-labelledby="hLife">
+    <section class="reveal" aria-labelledby="hLife">
       <h2 id="hLife">How fast posts gain reach</h2>
       <p class="lead" id="lifeLead"></p>
       <div class="card">
@@ -248,14 +286,14 @@
       </div>
     </section>
 
-    <section aria-labelledby="hPosts">
+    <section class="reveal" aria-labelledby="hPosts">
       <h2 id="hPosts">Top posts</h2>
       <p class="lead" id="postsLead"></p>
       <div class="tablewrap"><table id="postsTable"><thead id="thead"></thead><tbody id="posts"></tbody></table></div>
       <button class="more" id="more" hidden></button>
     </section>
 
-    <section aria-labelledby="hAud" id="sAud">
+    <section class="reveal" aria-labelledby="hAud" id="sAud">
       <h2 id="hAud">Who follows you</h2>
       <p class="lead" id="audLead"></p>
       <div class="card cols3">
@@ -279,10 +317,24 @@ const COLS = [["reach", "Reach"], ["views", "Views"], ["likes", "Likes"], ["comm
 const PLURAL = { Reel: "Reels", Carousel: "Carousels", Image: "Images", Video: "Videos" };
 const state = { days: 30, sort: "reach", dir: -1, showAll: false, account: [], media: [], metrics: [], audience: [] };
 const charts = {};
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const pendingCharts = new Set();
+const shown = {};
+let firstTilesDone = false;
+// sections ease in once, the first time they scroll into view; their charts and bars play then
+const io = !reduce && "IntersectionObserver" in window && document.visibilityState === "visible" ? new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add("in"); io.unobserve(e.target);
+    [...pendingCharts].forEach(c => { if (e.target.contains(c.canvas)) { pendingCharts.delete(c); c.update(); } });
+  });
+}, { threshold: 0.06, rootMargin: "0px 0px -5% 0px" }) : null;
+document.querySelectorAll("section.reveal").forEach(sec => io ? io.observe(sec) : sec.classList.add("in"));
 
 Chart.defaults.font.family = '"Source Serif 4", Georgia, serif';
 Chart.defaults.font.size = 13;
 Chart.defaults.color = MUTED;
+Chart.defaults.animation = reduce ? false : { duration: 700, easing: "easeOutQuart" };
 
 const $ = id => document.getElementById(id);
 const fmt = n => n == null || isNaN(n) ? "–" : Math.round(n).toLocaleString("en");
@@ -351,7 +403,7 @@ function spark(values) {
   if (nums.length < 2) return "";
   const lo = Math.min(...nums), hi = Math.max(...nums), span = hi - lo || 1;
   const pts = v.map((x, i) => x == null ? null : `${(i / (v.length - 1) * 100).toFixed(2)},${(30 - (x - lo) / span * 28 - 1).toFixed(2)}`).filter(Boolean).join(" ");
-  return `<div class="spark" aria-hidden="true"><svg viewBox="0 0 100 30" preserveAspectRatio="none"><line class="base" x1="0" y1="29.5" x2="100" y2="29.5"/><polyline points="${pts}"/></svg></div>`;
+  return `<div class="spark" aria-hidden="true"><svg class="wipe" viewBox="0 0 100 30" preserveAspectRatio="none"><line class="base" x1="0" y1="29.5" x2="100" y2="29.5"/><polyline points="${pts}"/></svg></div>`;
 }
 
 /* ---------- charts ---------- */
@@ -363,7 +415,32 @@ function chartOpts(stacked) {
       y: { stacked, grid: { color: GRID }, border: { display: false }, ticks: { maxTicksLimit: 5, callback: v => v.toLocaleString("en") } }
     } };
 }
-function draw(id, config) { charts[id]?.destroy(); charts[id] = new Chart($(id), config); }
+function draw(id, config) {
+  if (charts[id]) { pendingCharts.delete(charts[id]); charts[id].destroy(); }
+  charts[id] = new Chart($(id), config);
+  const sec = $(id).closest("section");
+  if (io && sec && !sec.classList.contains("in")) { charts[id].reset(); pendingCharts.add(charts[id]); }
+}
+
+function countUp() {
+  document.querySelectorAll("#tiles .tile").forEach(t => {
+    const el = t.querySelector(".val"), key = t.querySelector(".lab").textContent, txt = el.textContent.trim();
+    const isPct = txt.endsWith("%"), n = parseFloat(txt.replace(/[^0-9.]/g, ""));
+    if (isNaN(n)) { shown[key] = 0; return; }
+    const from = shown[key] ?? 0; shown[key] = n;
+    if (reduce || from === n) return;
+    const f = v => isPct ? v.toFixed(1) + "%" : Math.round(v).toLocaleString("en"), t0 = performance.now(), dur = 700;
+    const step = now => { const p = Math.min(1, Math.max(0, (now - t0) / dur)), e = 1 - Math.pow(1 - p, 4);
+      if (p < 1) { el.textContent = f(from + (n - from) * e); requestAnimationFrame(step); } else el.textContent = txt; };
+    requestAnimationFrame(step);
+  });
+}
+function fadeRows() { if (!reduce) $("posts").animate([{ opacity: 0.35 }, { opacity: 1 }], { duration: 200, easing: "cubic-bezier(0.2, 0, 0, 1)" }); }
+function revealExtraRows() {
+  if (reduce) return;
+  [...$("posts").rows].slice(10).forEach((r, i) => r.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }],
+    { duration: 240, delay: Math.min(i, 8) * 25, easing: "cubic-bezier(0.16, 1, 0.3, 1)", fill: "backwards" }));
+}
 const line = (id, labels, data) => draw(id, { type: "line", options: chartOpts(false),
   data: { labels, datasets: [{ data, borderColor: SIRIUS, backgroundColor: SIRIUS, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: .25 }] } });
 const bars = (id, labels, data) => draw(id, { type: "bar", options: chartOpts(false),
@@ -408,6 +485,9 @@ function renderTiles({ acct, prevAcct, ps, prevPs }) {
     { lab: "Reposts", val: reposts ? fmt(sumOf(acct, "reposts")) : "–", dl: reposts ? (change(sumOf(acct, "reposts"), prevSum("reposts")) || `${fmt(avgDay(acct, "reposts"))} a day`) : "not available yet", sp: reposts ? spark(acct.map(r => r.reposts)) : "" }
   ];
   $("tiles").innerHTML = tiles.map(t => `<div class="tile"><div class="lab">${t.lab}</div><div class="val">${t.val}</div><div class="dl">${t.dl || ""}</div>${t.sp}</div>`).join("");
+  $("tiles").classList.toggle("enter", !firstTilesDone && !reduce);
+  firstTilesDone = true;
+  countUp();
   $("glanceLead").textContent = `The last ${d} days${prevAcct ? ", compared with the ${d} days before".replace("${d}", d) : ""}. Posts published exclude stories.`;
 }
 
@@ -417,7 +497,7 @@ function splitRow(label, aVal, bVal, perDay) {
   const pa = aVal / t * 100, pb = 100 - pa;
   const inner = (name, p) => p >= 24 ? `${name} ${Math.round(p)}%` : p >= 9 ? `${Math.round(p)}%` : "";
   return `<div class="split"><div class="split-h"><span>${label}</span><span>${fmt(perDay)} a day</span></div>
-    <div class="bar" role="img" aria-label="${label}: followers ${Math.round(pa)} percent, non-followers ${Math.round(pb)} percent">
+    <div class="bar wipe" role="img" aria-label="${label}: followers ${Math.round(pa)} percent, non-followers ${Math.round(pb)} percent">
       <div class="seg a" style="width:${pa}%">${inner("Followers", pa)}</div><div class="seg b" style="width:${pb}%">${inner("Non-followers", pb)}</div></div>
     <div class="keys"><span class="key"><i class="a"></i>Followers ${fmt(aVal)}</span><span class="key"><i class="b"></i>Non-followers ${fmt(bVal)}</span></div></div>`;
 }
@@ -438,8 +518,8 @@ function renderGrowthMix(acct) {
 
 function rankRows(items, alt) {
   const max = Math.max(1, ...items.map(i => i.value));
-  return items.map(i => `<div class="rank${alt ? " alt" : ""}"><div class="n">${esc(i.name)}${i.note ? `<small>${esc(i.note)}</small>` : ""}</div>
-    <div class="track"><div class="fill" style="width:${i.value / max * 100}%"></div></div><div class="v">${esc(i.label)}</div></div>`).join("");
+  return items.map((i, k) => `<div class="rank${alt ? " alt" : ""}" style="--k:${k}"><div class="n">${esc(i.name)}${i.note ? `<small>${esc(i.note)}</small>` : ""}</div>
+    <div class="track"><div class="fill grow" style="width:${i.value / max * 100}%"></div></div><div class="v">${esc(i.label)}</div></div>`).join("");
 }
 
 function renderFormats(ps, acct) {
@@ -512,7 +592,7 @@ function renderPosts(ps) {
       const v = p[k], isBest = v != null && v === best[k] && ps.length > 1;
       const text = k === "er" ? pct(v) : fmt(v);
       const mult = k === "reach" && usual && v != null ? (() => { const m = v / usual; return `<div class="mult ${m >= 1.5 ? "up" : m <= 0.67 ? "down" : ""}">${m.toFixed(1)}× usual</div>`; })() : "";
-      const mini = k === "reach" ? `${mult}<div class="mini"><i style="width:${(v || 0) / maxReach * 100}%"></i></div>` : "";
+      const mini = k === "reach" ? `${mult}<div class="mini"><i class="grow" style="width:${(v || 0) / maxReach * 100}%"></i></div>` : "";
       return `<td class="${isBest ? "best" : ""}">${text}${mini}</td>`;
     }).join("");
     return `<tr>${first}${cells}</tr>`;
@@ -555,8 +635,8 @@ function renderChanged({ acct, prevAcct, ps, prevPs }) {
   lead.innerHTML = text;
   const row = r => { const c = ch(r), max = Math.max(r.prev, r.cur, 1), cls = c == null ? "flat" : c > 0.005 ? "up" : c < -0.005 ? "down" : "flat";
     return `<div class="cmp"><div class="n">${r.name}<small>${r.note}</small></div>
-      <div class="bars"><div class="line"><div class="bw"><div class="b prev" style="width:${r.prev / max * 100}%"></div></div><span class="num">${fmt(r.prev)}</span></div>
-      <div class="line"><div class="bw"><div class="b cur" style="width:${r.cur / max * 100}%"></div></div><span class="num">${fmt(r.cur)}</span></div></div>
+      <div class="bars"><div class="line"><div class="bw"><div class="b prev grow" style="width:${r.prev / max * 100}%"></div></div><span class="num">${fmt(r.prev)}</span></div>
+      <div class="line"><div class="bw"><div class="b cur grow" style="width:${r.cur / max * 100}%"></div></div><span class="num">${fmt(r.cur)}</span></div></div>
       <div class="chgc">${c == null ? "–" : `<span class="chg ${cls}">${cls === "up" ? "▲ " : cls === "down" ? "▼ " : ""}${Math.abs(c * 100).toFixed(0)}%</span>`}</div></div>`; };
   el.innerHTML = `<div class="keys cmp-keys"><span class="key"><i class="a"></i>Previous ${d} days</span><span class="key"><i class="b"></i>Last ${d} days</span></div>` + rows.map(row).join("");
   note.textContent = "Recent posts are still gaining reach, so the latest period can look lower than it will end up.";
@@ -622,14 +702,16 @@ function showUpdated() {
 $("range").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   state.days = +b.dataset.d;
-  document.querySelectorAll("#range button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  const btns = [...document.querySelectorAll("#range button")];
+  btns.forEach(x => x.setAttribute("aria-pressed", x === b));
+  $("range").style.setProperty("--i", btns.indexOf(b));
   render();
 });
 $("thead").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
-  state.dir = state.sort === b.dataset.c ? -state.dir : -1; state.sort = b.dataset.c; render();
+  state.dir = state.sort === b.dataset.c ? -state.dir : -1; state.sort = b.dataset.c; render(); fadeRows();
 });
-$("more").addEventListener("click", () => { state.showAll = !state.showAll; render(); });
+$("more").addEventListener("click", () => { state.showAll = !state.showAll; render(); if (state.showAll) revealExtraRows(); });
 
 function apply([a, m, s, au]) {
   state.account = a; state.media = m; state.metrics = s; state.audience = au;
