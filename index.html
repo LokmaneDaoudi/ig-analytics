@@ -310,7 +310,7 @@
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
-const STALE_HOURS = 6;
+const STALE_HOURS = 12; // GitHub cron is "every 2h" but in practice fires every ~5–9h
 const SIRIUS = "#FFBF00", CLAY = "#D7976B", PEACH = "#FFE4BD", NIGHT = "#17293A";
 const MUTED = "rgba(255,228,189,.72)", GRID = "rgba(255,228,189,.14)";
 const COLS = [["reach", "Reach"], ["views", "Views"], ["likes", "Likes"], ["comments", "Comments"], ["saves", "Saves"], ["shares", "Shares"], ["reposts", "Reposts"], ["er", "Engagement"]];
@@ -689,10 +689,11 @@ function renderAudience() {
 }
 
 function showUpdated() {
-  const times = state.account.map(r => r.fetched_at).filter(Boolean).sort();
+  // fetched_at arrives as a Date (PapaParse dynamicTyping); compare numerically, not via default string sort.
+  const times = state.account.map(r => r.fetched_at && new Date(r.fetched_at).getTime()).filter(x => x && !isNaN(x));
   const el = $("updated"), banner = $("stale");
   if (!times.length) { el.textContent = "No data yet."; return; }
-  const t = new Date(times[times.length - 1]), hrs = (Date.now() - t) / 36e5;
+  const t = new Date(Math.max(...times)), hrs = (Date.now() - t) / 36e5;
   el.textContent = `Updated ${t.toLocaleString("en", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`;
   banner.hidden = hrs <= STALE_HOURS;
   if (hrs > STALE_HOURS) banner.textContent = `This data is ${Math.round(hrs)} hours old. The collector may have stopped, so check the Actions tab on GitHub.`;
